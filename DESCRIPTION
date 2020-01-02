@@ -1,0 +1,21 @@
+Package: learningr
+Title: Introduction to R for FdV bachelor students
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Mahendra",
+           family = "Mariadassou",
+           role = c("aut", "cre"),
+           email = "mahendra.mariadassou@gmail.com",
+           comment = c(ORCID = "0000-0003-2986-354X"))
+Description: This packages distributes a set of R tutorials
+    used to teach the R language to L2 students from the bachelor
+    "Frontières du Vivant". This is a companion package to the lectures
+    given by Tristan Mary-Huard in UE 2.4
+License: GPL-3
+Imports: 
+    dplyr,
+    ggplot2,
+    learnr,
+    tidyr
+Encoding: UTF-8
+LazyData: true
