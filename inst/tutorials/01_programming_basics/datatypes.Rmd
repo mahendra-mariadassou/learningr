@@ -74,7 +74,7 @@ Have a quick look at the code for the `cor` function
 cor
 ```
 
-Unlike `sqrt`, the body of `cor` is quite long! This a very useful function that you'll use frequently in the future. Let's display the help page of `cor` using `?cor`
+Unlike `sqrt`, the body of `cor` is quite long! This a very useful function that you'll use frequently in the future. Let's display the help page of `cor` using `?cor` (**the help is only displayed when using R in the console/Rstudio, not in this self-learning framework**)
 
 ```{r cor_help, exercise = TRUE}
 
@@ -159,7 +159,7 @@ Generate 100 samples from a normal deviation with mean 10 and standard deviation
 ```
 
 ```{r rnorm_1-solution}
-rnorm(n = 100, mean = 15, sd = 2)
+rnorm(n = 100, mean = 10, sd = 2)
 ```
 
 There is an error in the following call to `rnorm`. Spot it and fix it. 
@@ -808,5 +808,5 @@ Congratulations, you now know the basics of R. We'll move in the next sessions t
 
 ### More ressources
 
-- You can look at the excellent Rstudio online [tutorials](https://rstudio.cloud/learn/primers)
+- You can look at the excellent Rstudio online (from which this course takes shameless inspiration) [tutorials](https://rstudio.cloud/learn/primers)
 

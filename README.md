@@ -20,12 +20,15 @@ You can install the development version from
 devtools::install_github("mahendra-mariadassou/learningr")
 ```
 
-This should install all R dependencies.
+If the installation of `devtools` fails, you may need to install some
+system dependencies (for example on ubuntu/debian):
 
-On **Linux** and **Mac OS**:
+``` bash
+sudo apt-get install libxml2-dev libcurl4-openssl-dev libssl-dev
+```
 
-  - you should only need git which you can install from the official
-    repo via `apt`/`brew`
+On Mac, you may need some of the compiling tools listed
+[here](https://cran.r-project.org/bin/macosx/tools/)
 
 On **Windows**: you’ll need **Rtools** and **git**
 
