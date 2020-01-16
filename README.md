@@ -45,5 +45,7 @@ This package is intended for use with `learnr`:
 
 ``` r
 library(learnr)
+## List of all lessons
 learnr::run_tutorial("01_programming_basics", package = "learningr")
+learnr::run_tutorial("02_random_variables", package = "learningr")
 ```
