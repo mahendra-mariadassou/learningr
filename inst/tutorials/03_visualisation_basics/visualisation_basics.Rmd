@@ -30,6 +30,8 @@ These skills will quickly add visualization to your data science toolkit. You ca
 
 ### Acknowledgments
 
+This tutorial is copied from Rstudio [primers](https://rstudio.cloud/learn/primers/1.1) and distributed in this package only for convenience purpose. The lessons they write are superb and it's much smarter to stand on the shoulders of giants and give them proper credit than to write copycats. 
+
 These examples are excerpted from _R for Data Science_ by Hadley Wickham and Garrett Grolemund, published by O’Reilly Media, Inc., 2016, ISBN: 9781491910399. You can purchase the book at [shop.oreilly.com](http://shop.oreilly.com/product/0636920034407.do).
 
 This tutorial uses the [core tidyverse packages](http://tidyverse.org/), including ggplot2, which have been pre-loaded for your convenience.
