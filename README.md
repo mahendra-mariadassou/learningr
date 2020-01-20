@@ -16,8 +16,8 @@ You can install the development version from
 [GitHub](https://github.com/) with:
 
 ``` r
-# install.packages("devtools")
-devtools::install_github("mahendra-mariadassou/learningr")
+# install.packages("remotes")
+remotes::install_github("mahendra-mariadassou/learningr")
 ```
 
 If the installation of `devtools` fails, you may need to install some
@@ -48,4 +48,5 @@ library(learnr)
 ## List of all lessons
 learnr::run_tutorial("01_programming_basics", package = "learningr")
 learnr::run_tutorial("02_random_variables", package = "learningr")
+learnr::run_tutorial("03_visualisation_basics", package = "learningr")
 ```
