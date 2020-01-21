@@ -137,7 +137,7 @@ Let's move back to our dice example. If the dice is fair, when we throw the dice
 
 Look at the help of `sample()` using `?sample()` (possibly in another session) and complete the following code to throw a dice in your computer. Repeat multiple times and try to understand what happens. 
 
-```{r sample_question, exercise = TRUE, eval = FALSE}
+```{r sample_question, exercise = TRUE}
 sample(, size = 1)
 ```
 
