@@ -13,9 +13,7 @@ Description: This packages distributes a set of R tutorials
     given by Tristan Mary-Huard in UE 2.4
 License: GPL-3
 Imports: 
-    dplyr,
-    ggplot2,
     learnr,
-    tidyr
+    tidyverse
 Encoding: UTF-8
 LazyData: true
