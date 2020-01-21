@@ -51,4 +51,5 @@ library(learnr)
 learnr::run_tutorial("01_programming_basics", package = "learningr")
 learnr::run_tutorial("02_random_variables", package = "learningr")
 learnr::run_tutorial("03_visualisation_basics", package = "learningr")
+learnr::run_tutorial("04.1_exploratory_data_analysis", package = "learningr")
 ```
