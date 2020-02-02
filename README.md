@@ -76,3 +76,11 @@ learnr::run_tutorial("04.4_boxplots", package = "learningr")
 learnr::run_tutorial("04.5_scatterplots", package = "learningr")
 learnr::run_tutorial("04.6_linegraphs", package = "learningr")
 ```
+
+## Data manipulation
+
+``` r
+learnr::run_tutorial("05.1_tibbles", package = "learningr")
+learnr::run_tutorial("05.2_isolating_data", package = "learningr")
+learnr::run_tutorial("05.3_summaries", package = "learningr")
+```
