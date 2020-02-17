@@ -84,3 +84,9 @@ learnr::run_tutorial("05.1_tibbles", package = "learningr")
 learnr::run_tutorial("05.2_isolating_data", package = "learningr")
 learnr::run_tutorial("05.3_summaries", package = "learningr")
 ```
+
+### Estimation and confidence intervals
+
+``` r
+learnr::run_tutorial("06.1_sampling", package = "learningr")
+```
