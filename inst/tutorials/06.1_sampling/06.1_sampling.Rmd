@@ -16,6 +16,14 @@ can_container <- rnorm(1e6, mean = 330, sd = 15)
 checker <- function(label, user_code, check_code, envir_result, evaluate_result, ...) {
   list(message = check_code, correct = TRUE, location = "append")
 }
+compute_estimate <- function(n) {
+  can_sample <- sample(x = can_container, size = n, replace = FALSE)
+  estimate <- mean(can_sample)
+  return(estimate)
+}
+estimates_data <- crossing(sample_size = c(10, 50, 100, 500, 1000, 5000), 
+                           estimate_number = 1:100) %>% 
+  mutate(estimate_value = map_dbl(sample_size, compute_estimate))
 tutorial_options(exercise.timelimit = 60, exercise.checker = checker)
 knitr::opts_chunk$set(echo = FALSE)
 ```
@@ -97,7 +105,7 @@ Our estimator $\bar{Y}$ is a *random variable*, if we had access to its distribu
 
 We first create a tibble with all combination and then compute an estimate with our function `compute_estimate` for each combination. The syntax is a bit involved but don't worry too much about it as it's not the main purpose. 
 
-```{r estimates_data, echo = TRUE}
+```{r estimates_data, echo = TRUE, eval = TRUE, include = TRUE}
 estimates_data <- crossing(sample_size = c(10, 50, 100, 500, 1000, 5000), 
                            estimate_number = 1:100) %>% 
   mutate(estimate_value = map_dbl(sample_size, compute_estimate))
@@ -110,7 +118,7 @@ We just created 100 estimates for each of the 6 sample sizes considered.
 
 You're now going to explore the distribution of those estimates. Use ggplot to explore the distribution of the data, make sure to separate the estimates by sample size. 
 
-```{r plot_estimate, exercise = TRUE, exercise.setup = "estimates_data"}
+```{r plot_estimate, exercise = TRUE}
 ggplot(estimates_data, ...)
 ```
 
@@ -362,7 +370,7 @@ In the previous section, the pivotal statistic $Z$ depends on $\sigma$ being kno
 
 We can replace it with the classical estimator $S^2 = \frac{1}{n-1}\sum_{i=1}^{n}(Y_i - \bar{Y})^2$ and plug it in the definition of $Z$ to obtain a new statistic.
 $$
-T & = \frac{\bar{Y} - \mu}{S / \sqrt{n}}
+T = \frac{\bar{Y} - \mu}{S / \sqrt{n}}
 $$
 
 
@@ -540,7 +548,7 @@ question("In this example, the optimal confidence interval is centered around $\
 ```
 
 ```{r q8}
-question("If I build 100 $CI(0.95)$ from 100 different random samples, only 5 of them do not cover $\\mu$$", 
+question("If I build 100 $CI(0.95)$ from 100 different random samples, only 5 of them do not cover $\\mu$", 
          answer("true", correct = FALSE), 
          answer("false", correct = TRUE), 
          post_message = "On average, 5% of the 95% confidence interval do not cover $\\mu$ but it's only true on average, not for all sets of confidence intervals.") 
