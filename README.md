@@ -89,4 +89,5 @@ learnr::run_tutorial("05.3_summaries", package = "learningr")
 
 ``` r
 learnr::run_tutorial("06.1_sampling", package = "learningr")
+learnr::run_tutorial("06.2_testing", package = "learningr")
 ```
