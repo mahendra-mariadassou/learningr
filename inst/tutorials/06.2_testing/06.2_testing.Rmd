@@ -13,13 +13,14 @@ library(learnr)
 library(tidyverse)
 set.seed(42)
 can_sizes <- rnorm(1e2, mean = 330, sd = 3)
+set.seed(43)
+can_sizes_A <- rnorm(1e2, mean = 332.5, sd = 3)
+can_sizes_B <- rnorm(1e2, mean = 333, sd = 3)
+set.seed(44)
+sugar_con <- rnorm(100, 14, 1)
+sugar_con_2 <- rnorm(100, 13.5, 1)
 checker <- function(label, user_code, check_code, envir_result, evaluate_result, ...) {
   list(message = check_code, correct = TRUE, location = "append")
-}
-compute_estimate <- function(n) {
-  can_sample <- sample(x = can_container, size = n, replace = FALSE)
-  estimate <- mean(can_sample)
-  return(estimate)
 }
 tutorial_options(exercise.timelimit = 60, exercise.checker = checker)
 knitr::opts_chunk$set(echo = FALSE)
@@ -33,7 +34,7 @@ You want to take the matter into your hands and contact a local measurement labo
 
 You send the lab a pack of 100 randomly sampled cans and it sends you back the 1000 measurements, stored in the object `can_sizes`). Each element of `can_sizes` is the capacity of **one** can. 
 
-## Stating the problem and statistical model. 
+## Stating the problem and statistical model (t-test I)
 
 Note $\mu$ the **actual** can capacity of your provider and $X_i$ the capacity of can $i$ (measured to be $x_i$). 
 
@@ -204,7 +205,7 @@ pt(t, df = 99)
 
 Typing all of the above to compute $\hat{\mu}$, $\hat{\sigma}$, $t$ and $p$ is not very convenient. Fortunately, `R` provides the `t.test()` function to spare you some typing:
 
-```{r}
+```{r echo = TRUE}
 t.test(x = can_sizes, mu = 333, alternative = "less")
 ```
 
@@ -220,12 +221,12 @@ quiz(caption = "t test",
      post_message = "With a p-value as small as 1.929e-15, it's very unlikely that you ended with a mean capacity of 330.0975 in your sample just by chance. The provider is cheating you of roughly 1% of your due."), 
      question("How would you perform a test of $H_0: \\mu = 333$ against $H_0: \\mu \\neq 333$?", 
               answer('`t.test(x = can_sizes, mu = 333, alternative = "greater")`', correct = FALSE), 
-              answer('`t.test(x = can_sizes, mu = 333, alternative = "two.sided")`', correct = TRUE, message = "You can even omit as it's the defaut value of alternative"))
+              answer('`t.test(x = can_sizes, mu = 333, alternative = "two.sided")`', correct = TRUE, message = "You can even omit `alternative = 'two.sided'`as it's the defaut value of `alternative`"))
 )
 ```
 
-**Bonus** You can use `t.test()` to quickly a confidence interval of $\hat{\mu}$ at any level 
-```{r}
+**Bonus** You can use `t.test()` to quickly build a confidence interval of $\hat{\mu}$ at any level 
+```{r echo = TRUE}
 t.test(x = can_sizes, conf.level = 0.99)
 ```
 
@@ -236,513 +237,361 @@ question("Which of the following are 95% confidence intervals of $\\mu$",
          answer("[329.4777, 330.7174]", correct = TRUE), 
          answer("($-\\infty$, 330.6163]", correct = TRUE), 
          answer("(329.5788, $\\infty$)", correct = TRUE), 
-         allow_retry = TRUE, post_message = "All of them are valid 95% confidence interval (you can check by changing the alternative in the previous call) but the first is optimal as it's the smallest one.")
+         allow_retry = TRUE, post_message = "All of them are valid 95% confidence interval (you can check by changing the value of `alternative` in the call to `t.ttest()`). The first is optimal as it's the smallest one (and corresponds to a bilateral test).")
 ```
 
-## Changing provider
+## Changing provider (t-test II)
 
-Based on your previous investigations, you decide to change providers for a more honest one. 
+Based on your previous investigations, you decide to change providers for a more honest one. You contact providers A and B, both of which send you a sample of 100 cans (`can_sizes_A` and `can_sizes_A`) for you to test. 
 
-But all providers are closed now due to the coronavirus...
+### Assessing the providers
 
+Test whether A and B really sell 333mL cans:
 
+```{r assess_A_B, exercise = TRUE}
 
-<!-- ```{r compute_estimate-hint} -->
-<!-- "Use the functions `sample()` and `mean()`" -->
-<!-- ``` -->
+```
 
-<!-- ```{r compute_estimate-solution} -->
-<!-- compute_estimate <- function(n) { -->
-<!--   can_sample <- sample(x = can_container, size = n, replace = FALSE) -->
-<!--   estimate <- mean(can_sample) -->
-<!--   return(estimate) -->
-<!-- } -->
-<!-- ``` -->
+```{r assess_A_B-hint-1}
+"Reproduce the code used for the original provider"
+```
 
-<!-- ### Looking at the estimates -->
+```{r assess_A_B-hint-2}
+"Use the `t.test()` function()"
+```
 
-<!-- Use your function to get estimates $\hat{\mu}$ of $\mu$ for various sample sizes (ranging from $n = 10$ to $n = 10000$). Get more than one estimate for each sample size.  -->
+```{r assess_A_B-solution}
+t.test(can_sizes_A, mu = 333, alternative = "less")
+t.test(can_sizes_B, mu = 333, alternative = "less")
+```
 
-<!-- ```{r comp_est} -->
-<!-- compute_estimate <- function(n) { -->
-<!--   can_sample <- sample(x = can_container, size = n, replace = FALSE) -->
-<!--   estimate <- mean(can_sample) -->
-<!--   return(estimate) -->
-<!-- } -->
-<!-- ``` -->
+```{r q7}
+question("Which of the following statements do you agree with?", 
+         answer("Provider A cans are 333mL large", correct = TRUE), 
+         answer("Provider B cans are 333mL large", correct = TRUE), 
+         allow_retry = TRUE,
+         post_message = "For both providers, you obtained large p-values. There is thus no reason to distrust either. To be perfectly accurate, you don't reject the assumption that the cans are 333mL large. They could be, for example provider A could sell you 332.5 mL large cans, but you don't have enough evidence to detect that.")
+```
 
-<!-- ```{r comp_est_exercice, exercise = TRUE, exercise.setup = "comp_est"} -->
-<!-- compute_estimate(n = 10) -->
-<!-- ``` -->
+### Comparing the providers 
 
-<!-- ```{r comp_est_exercice-solution} -->
-<!-- replicate(7, compute_estimate(n = 10)) ## call compute_estimate(10) 7 times -->
-<!-- replicate(7, compute_estimate(n = 100)) ## call compute_estimate(100) 7 times -->
-<!-- replicate(7, compute_estimate(n = 1000)) ## call compute_estimate(1000) 7 times -->
-<!-- ``` -->
+Your first tests suggest that providers A and B are not selling grossly undersized cans but before picking one of them, you want to check if there are differences between the cans they sell. This is a test of _equality of the means_.
 
-<!-- ```{r q1} -->
-<!-- question( -->
-<!--   "What happens to $\\hat{\\mu}$ when $n$ increases?", -->
-<!--   answer("The estimates are more dispersed.", correct = FALSE, message = "Not really, take a closer look at the rang of estimates obtained for a given sample sizes"), -->
-<!--   answer("The estimates are less dispersed.", correct = TRUE, message = "Yes, different estimates become similar when n increases"), -->
-<!--   allow_retry = TRUE -->
-<!-- ) -->
-<!-- ``` -->
+Formally note:
 
-<!-- ### Creating many estimates -->
+- $n_A$ (resp. $n_B$) the number of cans from provider $A$ (resp. $B$)
+- $X_i^A$ (resp. $X_i^B$) the size of can $i$ from provider $A$ (resp. $B$)
 
-<!-- We just illustrated something you've seen in class, the estimate depends on the *sample*. Since `compute_estimate` creates a new sample each times it's called, it will never (or only rarely) produce exactly the same estimate.  -->
+And assume that the $(X_i^A)_{i=1\dots n_A}$ (resp. $(X_i^A)_{i=1\dots n_A}$) are i.i.d $\mathcal{N}(\mu_A, \sigma^2_A)$ (resp. $\mathcal{N}(\mu_B, \sigma^2_B)$). For simplicity, you can assume $\sigma_A = \sigma_B = \sigma$ (equal but unknown variances) and $n_A = n_B = n$ (equal sample sizes). 
 
-<!-- Our estimator $\bar{Y}$ is a *random variable*, if we had access to its distribution we could compute its bias and and variance. Here we don't know (yet) the exact distribution of $\bar{Y}$ yet. We're thus going to look only at its distribution instead by creating many estimates (say 100, numbered from 1 to 100) for each sample size in $\{10, 50, 100, 500, 1000, 5000\}$.  -->
+You want to test $H_0: \mu_A = \mu_B$ against $H_1: \mu_A \neq \mu_B$. You can do that using `t.test()` with the following syntax (fill in the blanks):
 
-<!-- We first create a tibble with all combination and then compute an estimate with our function `compute_estimate` for each combination. The syntax is a bit involved but don't worry too much about it as it's not the main purpose.  -->
+```{r compare_provider_A_and_B, exercise = TRUE}
+t.test(
+  x = ,            ## can sizes from provider A 
+  y = ,            ## can sizes from provider B 
+  alternative = ,  ## what should you put here?
+  var.equal = TRUE ## keep that value unchanged
+)
+```
 
-<!-- ```{r estimates_data, echo = TRUE, eval = TRUE, include = TRUE} -->
-<!-- estimates_data <- crossing(sample_size = c(10, 50, 100, 500, 1000, 5000),  -->
-<!--                            estimate_number = 1:100) %>%  -->
-<!--   mutate(estimate_value = map_dbl(sample_size, compute_estimate)) -->
-<!-- estimates_data -->
-<!-- ``` -->
+```{r compare_provider_A_and_B-solution}
+t.test(
+  x = can_sizes_A,
+  y = can_sizes_B,
+  alternative = "two.sided",
+  var.equal = TRUE 
+)
+```
 
-<!-- We just created 100 estimates for each of the 6 sample sizes considered.  -->
+```{r q8}
+question("Did you find a difference between providers A and B?", 
+         answer("Yes", correct = FALSE, message = "Have a look at the p-value again"), 
+         answer("No", correct = TRUE), 
+         post_message = "Your p-value is quite large at 0.15 the 95% confidence interval of $\\mu_A - \\mu_B$ is [-1.41, 0.22] which includes 0. You thus don't have real evidence that providers A and B are different")
+```
 
-<!-- ### Distibution of the estimates -->
+### Another syntax
 
-<!-- You're now going to explore the distribution of those estimates. Use ggplot to explore the distribution of the data, make sure to separate the estimates by sample size.  -->
+In many real life context, your data will not be stored in two vectors `can_sizes_A` and `can_sizes_B` but rather in a tibble object:
+
+```{r}
+data_size = tibble(provider = rep(c("A", "B"), each = 100), 
+                   can_size = c(can_sizes_A, can_sizes_B))
+```
+
+```{r, echo = TRUE}
+data_size
+```
+
+There's no need to build two different vectors, you can use `t.test()` with the so called formula interface as follows
+```{r echo = TRUE}
+t.test(can_size ~ provider, data = data_size, 
+       var.equal = TRUE, alternative = "two.sided")
+```
+
+Note that the results are exactly the same as before. 
+
+### Power computation
+
+Your estimates are $\hat{\mu}_A = 332.6869$ and $\hat{\mu}_B = 333.2820$. The difference was not significant but it might be because you are _underpowered_ (i.e. the difference between $\mu_A$ and $\mu_B$ is real but small and you don't have enough samples to find it).
 
-<!-- ```{r plot_estimate, exercise = TRUE} -->
-<!-- ggplot(estimates_data, ...) -->
-<!-- ``` -->
+In that case, your conclusion is a Type II error (we're concluding that there's no difference when there really is one). 
+
+```{r fig2, echo = FALSE, out.width = "100%", fig.cap = "Type II errors"}
+knitr::include_graphics(path = "images/type_2_errors.png")
+```
+
+Let's say you want to find differences as small as 0.5 mL with high probability (say 0.9). You probably need more than 100 samples. Finding the exact value $n = n_A = n_B$ is called a _power study_. This is the goal of this section. 
+
+But first a bit of theory. The test statistic we just used is 
+
+$$
+T = \sqrt{n}\frac{\bar{X}_A - \bar{X}_B}{\sqrt{S_A^2 + S_B^2}}
+$$
+With the usual estimators of $\mu_A$, $\mu_B$, $\sigma_A^2$ and $\sigma_B^2$. The statistics is a bit complex but you only need to know that under $H_0$, $T \sim \mathcal{T}(2n-2)$
+
+Since you're doing a two-sided test, the rejection rule is $\mathcal{R} : |T| \geq r_\alpha$ where $r_\alpha$ is chosen such that 
+$$
+P_{H_0}(|T| > r_\alpha) = P_{H_0}(T < - r_\alpha) + P_{H_0}(T > r_\alpha) = \alpha
+$$
+and can be computed as `qt(1 - alpha/2, df = 2*n -2)`. In our example: 
+```{r echo = TRUE}
+alpha <- 0.05
+n <- 100
+qt(1 - alpha/2, df = 2*n -2)
+```
+
+What happens if $\Delta = \mu_A - \mu_B \neq 0$? 
+
+Your test statistic $T$ does not follow a $\mathcal{T}(2n-2)$ distribution anymore. 
+
+A close look shows that 
+$$
+\sqrt{n}\frac{(\bar{X}_A - \bar{X}_B) - \Delta}{\sqrt{S_A^2 + S_B^2}} = T - \frac{\sqrt{n}\Delta}{\sqrt{S_A^2 + S_B^2}} \sim \mathcal{T}(2n -2)
+$$
+Note that under $H_0$, $\Delta = 0$ so that $\frac{\sqrt{n}\Delta}{\sqrt{S_A^2 + S_B^2}} = 0$ and the above equality simplifies to $T \mathcal{T}(2n-2)$ under $H_0$. For simplicity, we're going to assume that $n$ is large enough to approximate $\sqrt{S_A^2 + S_B^2} = 2\sigma^2$. 
+
+The probability to reject $H_0$ (and thus detect differences) is given by the same decision rule $\mathcal{R}$ but the distribution of $T$ has changed from $P_{H_0} = P_{0}$ (i.e. where the subscript indicates the value of $\Delta$) to $P_{H_1} = P_{\Delta}$. It is thus given by
+$$
+\begin{align}
+P_{\Delta}(|T| > r_\alpha) & = P_{\Delta}(T < - r_\alpha) + P_{\Delta}(T > r_\alpha) \\ 
+& = P\left(\mathcal{T}(2n -2) + \frac{\sqrt{n}\Delta}{\sqrt{2}\sigma} < -r_\alpha\right) + P\left(\mathcal{T}(2n -2) + \frac{\sqrt{n}\Delta}{\sqrt{2}\sigma} > r_\alpha\right) \\
+& = P\left(\mathcal{T}(2n -2) < -r_\alpha - \frac{\sqrt{n}\Delta}{\sqrt{2}\sigma} \right) + P\left(\mathcal{T}(2n -2) > r_\alpha - \frac{\sqrt{n}\Delta}{\sqrt{2}\sigma} \right)
+\end{align}
+$$
+
+In our example, $\sqrt{2}\sigma \simeq \sqrt{S_A^2 + S_B^2} = 4.11$, $\alpha = 0.05$, $n=100$ and $r_\alpha = 1.97$. Let's compute $P_{\Delta}(|T| > r_\alpha)$ for $\Delta = 0.5$. 
+
+```{r echo = TRUE}
+c <- sqrt(100) * 0.5 / 4.11 ## 1.21
+pt(-1.97 - c, df = 198) + (1 - pt(1.97 - c, df = 198))
+```
+
+We only have a 22.6% chance of detecting a difference of 0.5mL between the provider!!
+
+Let take look at the detection power $P_{\Delta}(|T| > r_\alpha)$ as a fonction of $\Delta$. 
+
+```{r echo = FALSE}
+power <- function(delta) {
+  c <- sqrt(100) * delta / 4.11 ## 1.21
+  pt(-1.97 - c, df = 198) + (1 - pt(1.97 - c, df = 198))
+}
+tibble(Delta = seq(-2, 2, length.out = 1001), 
+       Power = power(Delta)) %>% 
+  ggplot(aes(x = Delta, y = Power)) + geom_line() + 
+  geom_vline(xintercept = 0.5, linetype = 2) + 
+  annotate("text", x = 0.52, y = 0, vjust = 0, hjust = 0, label = "Delta == 0.5", parse = TRUE) + 
+  geom_hline(yintercept = power(0.5), linetype = 2) + 
+  annotate("text", x = 0.52, y = power(0.5), vjust = 1, hjust = 0, label = "P[Delta](abs(T) >  r[alpha]) == 0.22", parse = TRUE)
+```
+
+As expected, the bigger the difference $|\Delta|$, the higher the detection power. For a given value of $\Delta$ (here 0.5), we can look at the detection power $P_{\Delta}(|T| > r_\alpha)$ as a fonction of $n$.
+
+```{r echo = FALSE}
+power <- function(n) {
+  c <- sqrt(n) * 0.5 / 4.11 ## 1.21
+  pt(-1.97 - c, df = 198) + (1 - pt(1.97 - c, df = 198))
+}
+tibble(n = seq(10, 1000, by = 10), 
+       Power = power(n)) %>% 
+  ggplot(aes(x = n, y = Power)) + geom_line() + 
+  ## n = 717
+  geom_vline(xintercept = 717, linetype = 2) + 
+  annotate("text", x = 719, y = 0, vjust = 0, hjust = 0, label = "n == 717", parse = TRUE) + 
+  geom_hline(yintercept = power(717), linetype = 2) + 
+  annotate("text", x = 719, y = power(717), vjust = 1, hjust = 0, label = "power = 0.90")
+```
+
+The graph reveals that you would need quite large sample sizes (> 700) to reliably detect differences of magnitude $0.5$mL. You decide not to do it. 
+
+### About equality of variance
+
+If you're not sure that the variances are equal in the two populations, you can set remove `var.equal = TRUE` or set `var.equal = FALSE` (the default) in `t.test()`. In general, it's good practice to check that the variances are equal between the two groups either by visual inspection:
+
+```{r echo = TRUE}
+ggplot(data_size, aes(x = provider, y = can_size)) + geom_boxplot()
+```
+
+Or with a test of equality of variances (`var.test()`)
+
+```{r echo = TRUE}
+var.test(can_size ~ provider, data = data_size)
+```
+
+Both checks confirm that we can reasonably assume $\sigma_A^2 = \sigma_B^2$. 
+
+## Assessing conformity (`prop.test()` I)
+
+Based on the previous results, you can't really decide between producers $A$ and $B$ and end up picking $A$ based on price. 
+
+After a few months you decide to evaluate the quality of the provider by looking at the sugar concentration in the soda. Provider $A$ advertises "> 80% of our cans contain at least 13.2 g / 100 mL of sugar". You measure sugar concentration (in g / 100 mL) in a sample of 100 cans and end up with 100 concentrations stored in `sugar_con`. 
+
+Formally, note $X_i$ the sugar concentration of can $i$ coded as $1$ (or `TRUE`) if the concentration is higher than 13.2 and $0$ (or `FALSE`) otherwise. 
+
+Assume that the $(X_i)$ are $i.i.d.$ with distribution with $X_i \sim \mathcal{B}(p)$.
+
+```{r q9}
+quiz(caption = "Formulating the hypotheses", 
+     question("Which of the following are valid null hypotheses ($H_0$)?", 
+              answer("$p = 0.8$", correct = TRUE), 
+              answer("$p \\geq 0.8$", correct = TRUE), 
+              answer("$p \\leq 0.8$", correct = FALSE),
+              answer("$p \\neq 0.8$", correct = FALSE), 
+              allow_retry = TRUE, 
+              post_message = "Your null hypothesis is what you need evidence against. Here you should assume the provider is honest and thus that $p \\geq 0.8$ or $p = 0.8$"), 
+     question("What is the alternative hypothesis ($H_1$)?", 
+              answer("$p = 0.8$", correct = FALSE), 
+              answer("$p > 0.8$", correct = FALSE), 
+              answer("$p < 0.8$", correct = TRUE),
+              answer("$p \\neq 0.8$", correct = FALSE, message = "It could be in other context, but not here. Read the statement of provider A again."), 
+              allow_retry = TRUE, 
+              post_message = "Your provider claims that at least 80% of the cans are valid (in term of sugar concentrations). The alternative is that at most 80% of them are.")
+)
+```
+
+### Preparing the data
+
+Build a boolean vector `conform` to identify the cans with concentrations higher than 13.2. 
+
+```{r sugar_con_conform, exercise = TRUE}
+conform <- 
+```
+
+```{r sugar_con_conform-hint}
+"Use `>=`"
+```
+
+```{r sugar_con_conform-solution}
+conform <- sugar_con >= 13.2
+```
+
+Use `table()` to count the number of `TRUE` in `conform`
+
+```{r count_sucess, exercise = TRUE}
+
+```
+
+```{r count_sucess-solution}
+conform <- sugar_con >= 13.2
+table(conform)
+```
+
+### Performing the test
+
+Equipped with this knowledge, you can test $H_0: p = 0.8$ against $H_0: p < 0.8$ using `prop.test()` using the following syntax (fill in the blanks): 
+
+```{r prop_test, exercise = TRUE}
+prop.test(
+  x = , ## Number of successes, here valid cans 
+  n = , ## Number of trials, here measured cans
+  p = , ## value of p under H_0
+  alternative = ## What should you put here?
+)
+```
+
+```{r prop_test-solution}
+prop.test(
+  x = 77, ## Number of successes, here valid cans 
+  n = 100, ## Number of trials, here measured cans
+  p = 0.8, ## value of p under H_0
+  alternative = "less" ## What should you put here?
+)
+```
+
+```{r q10}
+question("Based on your test, would you", 
+         answer("reject the claim of the provider", correct = FALSE, message = "How small is the p-value? Is that enough to reject $H_0$."), 
+         answer("not reject the claim of the provider", correct = TRUE), 
+         allow_retry = TRUE, 
+         post_message = "Indeed, you found a p-value of 0.266 which is not small enough to reject the claim (at least not at level 0.05)"
+         )
+```
+
+**Bonus** Just like `t.test()`, you can use `prop.test()` to compute confidence intervals for $p$. 
+
+```{r q11}
+question("What is the 95% bilateral confidence interval of p?", 
+         answer("[0, 0.836]", correct = FALSE, message = "That's a unilaterial interval"),
+         answer("[0.689, 1]", correct = FALSE, message = "That's a unilaterial interval"), 
+         answer("[0.673, 0.846", correct = TRUE, message = "Indeed"),
+         allow_retry = TRUE, 
+         post_message = "You can find it using `prop.test(x = 77, n = 100, conf.level = 0.95, alternative = 'two.sided')`"
+         )
+```
+
+## Assessing conformity (`prop.test()` II)
+
+After a few months, your provider announces a change in his soda formulation. To make you sure you don't get flouted you create a new sample of 100 cans and check the sugar concentration in those cans, resulting in a new vector `sugar_con_2`. You want to check that that the proportion of valid cans is unchanged. 
+
+Formally, if you note $p_1$ the proportion before the change and $p_2$ the proportion after, you want to test $H_0: p_1 = p_2$ against $H_1: p_1 \neq p_2$. 
+
+You first need to do a few computations. Compute the number of valid cans in you new sample
+
+```{r valid_after_change, exercise = TRUE}
+
+```
+
+```{r valid_after_change-hint}
+"Repeat what you did for `sugar_con`"
+```
+
+```{r valid_after_change-solution}
+conform <- sugar_con_2 >= 13.2
+table(conform)
+```
+
+You can now perform a test of equality of proportions before and after the change of formula
+```{r prop_test_2, exercise = TRUE}
+successes <- c(, ) ## number of valids cans before and after the change in formula
+trials <- c(, ) ## number of cans tested before and after the change in formula
+prop.test(x = sucesses, 
+          n = trials, 
+          alternative = ## What's your alternative hypothesis? 
+          )
+```
+
+```{r prop_test_2-hint-1}
+successes <- c(77, 54) 
+```
+
+```{r prop_test_2-hint-2}
+successes <- c(77, 54) 
+trials <- c(100, 100)
+```
+
+```{r prop_test_2-solution}
+successes <- c(77, 54)
+trials <- c(100, 100)
+prop.test(x = sucesses, n = trials, alternative = "two.sided")
+```
+
+```{r q12}
+question("Based on your results, would you say that the formulation change ", 
+         answer("affected the proportion of valid cans", correct = TRUE), 
+         answer("did not affect the proportion of valid cans", correct = FALSE, message = "Take another look at the p-value"), 
+         allow_retry = TRUE, 
+         post_message = "With a p-value at 0.001, you have pretty good evidence that $p_1 \\neq p_2$, so that the formulation change affected the proportion of valid cans. You can even say that the difference $p_1 - p_2$ is likely to lie in [0.09, 0.368], which is its 95% confidence interval")
+```
 
-<!-- ```{r plot_estimate-hint-1} -->
-<!-- "Use `geom_density()` or `geom_histogram()` and `facet_wrap()`" -->
-<!-- ``` -->
 
-<!-- ```{r plot_estimate-solution} -->
-<!-- ggplot(estimates_data, aes(x = estimate_value)) +  -->
-<!--   geom_histogram(binwidth = 0.5) +  -->
-<!--   geom_vline(xintercept = 330, color = "red") + ## advertised capacity -->
-<!--   facet_wrap(~sample_size) + ## separate the data by sample_size -->
-<!--   labs(x = "Estimate", y = "Density") ## Nice labels -->
-<!-- ``` -->
-
-<!-- ### Characterizing the distribution -->
-
-<!-- The previous graph illustrates a very general result in statistics: **the larger the sample, the more accurate the estimate**. There are of course exceptions (especially if the estimator is biased) but as a good rule of thumbs, _more is better_. Let's characterize the distribution of the estimates for each class size.  -->
-
-<!-- Compute the minimium, maximum, average and standard deviation of the estimate values for each sample size.  -->
-
-<!-- ```{r sam_size_mean_sd, exercise = TRUE} -->
-<!-- estimates_data %>% ... -->
-<!-- ``` -->
-
-<!-- ```{r sam_size_mean_sd-hint} -->
-<!-- "Use `group_by()` and `summarize()`" -->
-<!-- ``` -->
-
-<!-- ```{r sam_size_mean_sd-solution} -->
-<!-- estimates_summary <- estimates_data %>%  -->
-<!--   group_by(sample_size) %>%  -->
-<!--   summarize(estimate_sd   = sd(estimate_value),  -->
-<!--             estimate_mean = mean(estimate_value), -->
-<!--             estimate_min  = min(estimate_value),  -->
-<!--             estimate_max  = max(estimate_value)) -->
-<!-- estimates_summary -->
-<!-- ``` -->
-
-<!-- ```{r sam_size_mean_sd-check} -->
-<!-- "Good job! Note that the range and standard deviation of the estimate values decrease with sample size." -->
-<!-- ``` -->
-
-<!-- ### Understanding the distribution -->
-
-<!-- The previous graphs and tables tell us that: -->
-
-<!-- - the estimates are centered around the same value (~ 330) for all sample sizes -->
-<!-- - the spread of the estimates decreases as sample size increases.  -->
-
-<!-- Indeed when using only 10 cans to assess the capacity, the estimate $\hat{\mu}$ can be anywhere between 320 and 340 whereas it is very concentrated around 330 when 5000 cans.  -->
-
-<!-- Using the previous results, find a scaling relation between `estimate_sd` and `sample_size` -->
-
-<!-- ```{r estimates_summary} -->
-<!-- estimates_summary <- estimates_data %>%  -->
-<!--   group_by(sample_size) %>%  -->
-<!--   summarize(estimate_sd   = sd(estimate_value),  -->
-<!--             estimate_mean = mean(estimate_value), -->
-<!--             estimate_min  = min(estimate_value),  -->
-<!--             estimate_max  = max(estimate_value)) -->
-<!-- ``` -->
-
-<!-- ```{r sd_scaling, exercise = TRUE, exercise.setup = "estimates_summary"} -->
-
-<!-- ``` -->
-
-<!-- ```{r sd_scaling-hint-1} -->
-<!-- "Try a scatter plot of `estimate_sd` against `sample_size`" -->
-<!-- ``` -->
-
-<!-- ```{r sd_scaling-hint-2} -->
-<!-- "Maybe on a log scale" -->
-<!-- ``` -->
-
-<!-- ```{r sd_scaling-solution} -->
-<!-- ggplot(estimates_summary, aes(x = log(sample_size), y = log(estimate_sd))) +  -->
-<!--   geom_point() -->
-<!-- ``` -->
-
-<!-- <!-- ```{r sd-scaling-check} --> -->
-<!-- <!-- "Good job! This graph shows that the points are aligned on a line of slope -1/2. Since this is a log-log plot, `estimate_sd` scales as `1/sqrt{sample_size}`" --> -->
-<!-- <!-- ``` --> -->
-
-<!-- ```{r q2} -->
-<!-- question( -->
-<!--   "What is the scaling of `estimate_sd` with respect to $n$?",  -->
-<!--   answer("It increases with $n$"),  -->
-<!--   answer("It decreases with $n$", correct = TRUE), -->
-<!--   answer("It decreases as $1/n$", message = "Check carefully the scale of the x- and y-axes"),  -->
-<!--   answer("It decreases as $1/\\sqrt{n}$", correct = TRUE) -->
-<!--   ) -->
-<!-- ``` -->
-
-<!-- ```{r q3} -->
-<!-- question( -->
-<!--   "What sample size would you use to get an estimate with accuracy 1",  -->
-<!--   answer("10"),  -->
-<!--   answer("100"), -->
-<!--   answer("500", message = "Not quite, since the standard deviation is ~ 0.66, the typical spread will be at least 1.32 and you won't get accuracy 1"), -->
-<!--   answer("1000", correct = TRUE, message = "Since the standard deviation is ~ 0.45, the typical spread will be 0.9, lower than 1"),  -->
-<!--   answer("5000", correct = TRUE, message = "Since the standard deviation is ~ 0.208, the typical spread will be 0.42, lower than 1") -->
-<!--   ) -->
-<!-- ``` -->
-
-<!-- ## Bias and Variance -->
-
-<!-- To go further and compute the bias and variance of our estimate, we need to know the theoretical distribution of our estimate.  -->
-
-<!-- Assume that the can capacitites are independant and follow a normal distribution $\mathcal{N}(\mu, \sigma^2)$ with mean $\mu$ and variance $\sigma^2$.  -->
-
-<!-- The theory informs us that  -->
-
-<!-- $$ -->
-<!-- \bar{Y} = \frac{1}{n} \sum_{1}^n Y_i \sim \mathcal{N}\left(\mu, \frac{\sigma^2}{n}\right) -->
-<!-- $$ -->
-
-<!-- In particular, $E[\bar{Y}] = \mu$ and $V[\bar{Y}] = \frac{\sigma^2}{n}$.  -->
-
-<!-- As $n$ increases, the variance of $\bar{Y}$ decreases as $\frac{1}{n}$ and thus is standard deviation as $\frac{1}{\sqrt{n}}$. This is in line with our findings from the previous section.  -->
-
-<!-- The formula also tells us that $\bar{Y} \to \mu$ when $n \to \infty$.  -->
-
-<!-- ### Convergence of $\bar{Y}$  -->
-
-<!-- We're going to investigate this convergence by looking at estimates computed on increasingly large samples: the first 10 cans, the first 11 cans, etc.  -->
-
-<!-- Write a function to compute the capacity estimate from the first $n$ cans in `can_container` (and not from a random sample): -->
-
-<!-- ```{r compute_estimate_2, exercise = TRUE} -->
-<!-- compute_estimate_2 <- function(n) { -->
-<!--   estimate <- ### complete here -->
-<!--   return(estimate) -->
-<!-- } -->
-<!-- ``` -->
-
-<!-- ```{r compute_estimate_2-solution} -->
-<!-- compute_estimate_2 <- function(n) { -->
-<!--   estimate <- mean(can_container[1:n]) -->
-<!--   return(estimate) -->
-<!-- } -->
-<!-- ``` -->
-
-<!-- You can then look at the evolution of the estimate when you increase the sample size from $n = 1$ to $n = 50,000$ (there is no real point looking at larger sample sizes).  -->
-
-<!-- ```{r compute_estimate_2-setup} -->
-<!-- compute_estimate_2 <- function(n) { -->
-<!--   estimate <- mean(can_container[1:n]) -->
-<!--   return(estimate) -->
-<!-- } -->
-<!-- ``` -->
-
-<!-- ```{r estimates_convergence_echo, echo = TRUE, eval = FALSE} -->
-<!-- estimates_convergence <- tibble(sample_size = seq(from = 10, to = 50000, by = 1)) %>% -->
-<!--   mutate(estimate_value = map_dbl(sample_size, compute_estimate_2)) -->
-<!-- estimates_convergence -->
-<!-- ``` -->
-
-<!-- ```{r estimates_convergence, echo = FALSE, eval = TRUE} -->
-<!-- estimates_convergence <- tibble(sample_size = seq(from = 10, to = 50000, by = 1)) %>% -->
-<!--   mutate(estimate_value = cumsum(can_container)[sample_size] / sample_size) -->
-<!-- estimates_convergence -->
-<!-- ``` -->
-
-<!-- And plot the convergence of $\hat{\mu}$ to $\mu$ as a $n \to \infty$.  -->
-
-<!-- ```{r estimates_convergence_plot, exercise = TRUE} -->
-<!-- ggplot(...) -->
-<!-- ``` -->
-
-<!-- ```{r estimates_convergence_plot-solution} -->
-<!-- ggplot(estimates_convergence, aes(x = sample_size, y = estimate_value)) +  -->
-<!--   geom_line() + -->
-<!--   geom_hline(yintercept = 330, color = "red") -->
-<!-- ``` -->
-
-<!-- ## Confidence interval  -->
-
-<!-- In this section, we'll illustrate a few properties of confidence intervals.  -->
-
-<!-- ### Known variance -->
-
-<!-- Assume for now that $\sigma^2$ is knonw. We learned in the previous section that $\bar{Y} \sim \mathcal{N}(\mu, \frac{\sigma^2}{n})$ or equivalently that the pivotal statistic  -->
-<!-- $$ -->
-<!-- Z = \frac{\bar{Y} -\mu}{\sigma/\sqrt{n}} \sim \mathcal{N}(0, 1) -->
-<!-- $$ -->
-
-<!-- In particular, the distribution of $Z$ depends on neither $\mu$ nor $\sigma$ and can be used to construct *confidence intervals* (see [Tristan's slides](https://moodle.cri-paris.org/pluginfile.php/26108/mod_resource/content/1/Session4.pdf) for details).  -->
-
-<!-- In that simple case, to compute a confidence interval at level $1 - \alpha$, we simply need to find $a$ and $b$ such that  -->
-<!-- $$ -->
-<!-- P(a \leq Z \leq b) = 1 - \alpha -->
-<!-- $$ -->
-
-<!-- You've seen in class that the **optimal** solution was: -->
-
-<!-- - $a = q_{\alpha/2}$  -->
-<!-- - $b = q_{1 - \alpha/2}$  -->
-
-<!-- where $q_\beta$ is the quantile or order $\beta$ of the normal distribution, computed with the function `qnorm()`.  -->
-
-<!-- In fact, for every $\beta \leq \alpha$ we could set $a = q_{\beta}$ and $b = q_{1 - \alpha + \beta}$ to obtain a solution as:  -->
-<!-- $$ -->
-<!-- P(a \leq Z \leq b) = P(Z \leq q_{1 - \alpha + \beta}) - P(Z \leq q_{\beta}) = (1 - \alpha + \beta) - \beta = 1 - \alpha -->
-<!-- $$ -->
-<!-- The condition $\beta \leq \alpha$ ensures that $1 - \alpha + \beta \leq 1$ and that the corresponding quantile is properly defined and the *optimalù choice corresponds to $\beta = \alpha/2$.   -->
-
-<!-- But why is it optimal? The function `plot_norm_interval()` helps you visualize the interval $[q_{\beta}, q_{1 - \alpha + \beta}]$ for different values of $\beta$.  -->
-
-<!-- ```{r plot_norm_interval, echo = FALSE} -->
-<!-- plot_norm_interval <- function(beta, alpha = 0.05) { -->
-<!--   a <- qnorm(beta, mean = 0, sd = 1) ## q_beta -->
-<!--   b <- qnorm(1 - alpha + beta, mean = 0, sd = 1) ## q_{1 - alpha + beta} -->
-<!--   x <- c(a, b, seq(min(-5, a), max(5, b), length.out = 101)) %>% unique() %>% sort() -->
-<!--   df <- tibble(x = x,  -->
-<!--                d = dnorm(x),  -->
-<!--                side = case_when( -->
-<!--                  x <= a ~ "left",  -->
-<!--                  x >= b ~ "right", -->
-<!--                  TRUE   ~ "center")) -->
-<!--   ggplot(df, aes(x = x, y = d)) +  -->
-<!--     geom_area(aes(y = d, fill = side)) +  -->
-<!--     scale_fill_manual(values = c(left = "red", center = "transparent", right = "darkred"), guide = "none") +  -->
-<!--     annotate(x = a, y = dnorm(a), hjust = 0.75, vjust = 0, geom = 'text', label = "beta", parse = TRUE, color = "red") +  -->
-<!--     annotate(x = b, y = dnorm(b), hjust = 0.25, vjust = 0, geom = 'text', label = "1 - alpha + beta", parse = TRUE, color = "darkred") +  -->
-<!--     geom_segment(aes(x = a, xend = b, y = 0, yend = 0), color = "darkgreen") +  -->
-<!--     annotate(x = (a+b)/2, y = 0, hjust = 0.5, vjust = 0, geom = 'text', label = 'group("[",list(q[beta], q[1-alpha+beta]),"]")', parse = TRUE, color = "darkgreen") + -->
-<!--     annotate(x = -Inf, y = Inf, geom = "text", hjust = 0, vjust = 1, -->
-<!--              label = paste0("q[1-alpha+beta] - q[beta] ==", round(b-a, digits = 3)), parse = TRUE) +  -->
-<!--     geom_line() -->
-<!-- } -->
-<!-- ``` -->
-
-<!-- ```{r plot_norm_interval-exercise, exercise = TRUE, exercise.setup = "plot_interval"} -->
-<!-- plot_norm_interval(beta = 0.025, alpha = 0.05) -->
-<!-- ``` -->
-
-<!-- ```{r q4} -->
-<!-- question("How is the value $\\beta = \\alpha/2$ optimal?",  -->
-<!--          answer("It leads to a symmetric interval $[a, b]$", message = "It's true here but it's not always the case"),  -->
-<!--          answer("It leads to the smallest interval $[a, b]$", correct = TRUE),  -->
-<!--          allow_retry = TRUE -->
-<!--          ) -->
-<!-- ``` -->
-
-<!-- ### Unknown variance -->
-
-<!-- In the previous section, the pivotal statistic $Z$ depends on $\sigma$ being known, but $\sigma$ is usually unknown in practice... -->
-
-<!-- We can replace it with the classical estimator $S^2 = \frac{1}{n-1}\sum_{i=1}^{n}(Y_i - \bar{Y})^2$ and plug it in the definition of $Z$ to obtain a new statistic. -->
-<!-- $$ -->
-<!-- T = \frac{\bar{Y} - \mu}{S / \sqrt{n}} -->
-<!-- $$ -->
-
-
-<!-- But is it still a pivotal statistic? The surprising answer is yes.  -->
-<!-- $$ -->
-<!-- \begin{align} -->
-<!-- T & = \frac{\bar{Y} - \mu}{S / \sqrt{n}} = \frac{\bar{Y} - \mu}{\sigma / \sqrt{n}} \times \frac{\sigma}{S} \\ -->
-<!--   & = \underbrace{\frac{\bar{Y} - \mu}{\sigma / \sqrt{n}}}_{\sim \mathcal{N}(0, 1)} \times \left( \frac{1}{n-1}\underbrace{\frac{\sum_{i=1}^n (Y_i - \bar{Y})^2}{\sigma^2}}_{\sim \chi^2(n-1)} \right)^{-1/2} \sim \frac{\mathcal{N}(0, 1)}{\sqrt{\frac{\chi^2(n-1)}{n-1}}} \sim \mathcal{T}(n-1) -->
-<!-- \end{align} -->
-<!-- $$ -->
-
-<!-- Thanks to the properties of independent $\chi^2$ and gaussian variables (we've not properly shown that $S$ and $(\bar{Y} - \mu)/\sigma$ are independent, you'll have to trust me on that one), our statistic is pivotal and follows a Student's t-distribution with $n-1$ degrees of freedom.  -->
-
-<!-- Let's compare the $\mathcal{N}(0, 1)$ and $\mathcal{T}(n-1)$ distributions for various values of $n$.  -->
-
-<!-- ```{r compare-student-normal} -->
-<!-- df <- tibble(x    = seq(-4, 4, length.out = 1000),  -->
-<!--              `N(0, 1)` = dnorm(x),  -->
-<!--              `T(1)`  = dt(x, df = 1),  -->
-<!--              `T(2)`  = dt(x, df = 2),  -->
-<!--              `T(5)`  = dt(x, df = 5),  -->
-<!--              `T(10)`  = dt(x, df = 10),  -->
-<!--              `T(100)`  = dt(x, df = 100)) %>%  -->
-<!--   pivot_longer(-x, names_to = "distribution", values_to = "d") %>%  -->
-<!--   mutate(distribution = factor(distribution,  -->
-<!--                                levels = rev(c(paste0("T(", c(1, 2, 5, 10, 100), ")"), "N(0, 1)")))) -->
-<!-- ggplot(df, aes(x = x, y = d, color = distribution)) +  -->
-<!--   geom_line() +  -->
-<!--   scale_color_brewer() +  -->
-<!--   theme_dark() + -->
-<!--   theme(legend.position = c(0, 1), legend.justification = c(0, 1),  -->
-<!--         legend.background = element_rect(fill = "transparent"),  -->
-<!--         legend.key = element_rect(fill = "transparent")) -->
-<!-- ``` -->
-
-<!-- ```{r q5} -->
-<!-- question("Which statements are true?",  -->
-<!--          answer("The variance of $\\mathcal{T}(n)$ increases when $n$ increases.", -->
-<!--                 message = "Really? Take a closer look."), -->
-<!--          answer("The distribution of $\\mathcal{T}(n)$ is symmetric.",  -->
-<!--                 correct = TRUE),  -->
-<!--          answer("The distribution of $\\mathcal{T}(n)$ converges to the one of $\\mathcal{N}(0, 1)$ as $n$ increases.",  -->
-<!--                 correct = TRUE),  -->
-<!--          answer("Confidence intervals of $\\mathcal{T}(n)$ are smaller than the same ones for $\\mathcal{N}(0, 1)$", message = "Really? Take a closer look."),  -->
-<!--          allow_retry = TRUE,  -->
-<!--          post_message = "You can think of $\\mathcal{T}(n)$ as a noisy version of $\\mathcal{N}(0,1)$ with a larger spread (and higher variance). Since its variance is larger, it has wider confidence interval. However, as $n$ increases, $\\mathcal{T}(n)$ converges to $\\mathcal{N}(0,1)$ and at the limit we have $\\mathcal{T}(\\infty) = \\mathcal{N}(0,1)$" -->
-<!--          ) -->
-<!-- ``` -->
-
-<!-- The quantile of Student's t distribution are computed with `qt()`. It works like `qnorm()` but requires an extra parameter `df` (degree of freedom).  -->
-
-<!-- Compute the quantile of order 0.975 of a $\mathcal{T}(2)$ random variable: -->
-<!-- ```{r student_quantile, exercise = TRUE} -->
-
-<!-- ``` -->
-
-<!-- ```{r student_quantile-hint} -->
-<!-- "Use qt()" -->
-<!-- ``` -->
-
-<!-- ```{r student_quantile-solution} -->
-<!-- qt(p = 0.975, df = 2) -->
-<!-- ``` -->
-
-<!-- ```{r student_quantile-check} -->
-<!-- "Well done! You now have the knowledge required to compute confidence intervals. Note the quantile for $\\mathcal{T}(2)$ is 4.30, more than twice as high as the same quantile for $\\mathcal{N}(0, 1)$ and will result in much wider confidence intervals.  -->
-<!-- ``` -->
-
-<!-- ### Understanding confidence intervals (I) -->
-
-<!-- In the previous section, we learned how to replace $\sigma^2$ with its estimator to obtain a pivotal statistics. If we note $t_{n, \beta}$ the quantile of order $\beta$ of $\mathcal{T}(n)$. We can build a confidence interval of level $1-\alpha$ for $\mu$ as follows: -->
-
-<!-- $$ -->
-<!-- \begin{align} -->
-<!-- & P\left(t_{n-1, \alpha/2} \leq T \leq t_{n-1, 1 - \alpha/2} \right) = 1 - \alpha \\ \Rightarrow & P\left(t_{n-1, \alpha/2} \leq \frac{\bar{Y} - \mu}{S/\sqrt{n}} \leq t_{n-1, 1 - \alpha/2} \right) = 1 - \alpha \\  -->
-<!-- \Rightarrow & P\left( \frac{S}{\sqrt{n}}t_{n-1, \alpha/2} \leq \bar{Y} - \mu \leq \frac{S}{\sqrt{n}} t_{n-1, 1 - \alpha/2} \right) = 1 - \alpha \\ -->
-<!-- \Rightarrow & P\left( \frac{S}{\sqrt{n}}t_{n-1, \alpha/2} - \bar{Y} \leq -\mu \leq \frac{S}{\sqrt{n}} t_{n-1, 1 - \alpha/2}  - \bar{Y} \right) = 1 - \alpha \\ -->
-<!-- \Rightarrow & P\left( \frac{S}{\sqrt{n}}t_{n-1, 1 - \alpha/2} + \bar{Y} \leq \mu \leq - \frac{S}{\sqrt{n}} t_{n-1, \alpha/2} + \bar{Y} \right) = 1 - \alpha \\  -->
-<!-- \end{align} -->
-<!-- $$ -->
-<!-- Since $\mathcal{T}(n-1)$ has a symmetric distribution, $t_{n-1, \frac{\alpha}{2}} = - t_{n-1, 1 - \frac{\alpha}{2}}$ and the previous equality is often written  -->
-<!-- $$ -->
-<!-- P\left( \mu \in \left[ \bar{Y} \pm \frac{S}{\sqrt{n}} t_{n-1, 1 - \frac{\alpha}{2}} \right] \right) = 1 - \alpha -->
-<!-- $$ -->
-
-<!-- Consider the sample of the first $1000$ cans: `can_sample <- can_container[1:1000]`. Build a 95% confidence interval of the can capacity for that sample. -->
-
-<!-- ```{r confidence_interval_can, exercise = TRUE} -->
-<!-- can_sample <- can_container[1:1000] -->
-<!-- ``` -->
-
-<!-- ```{r confidence_interval_can-hint-1} -->
-<!-- "Start with an estimate $\\hat{\\mu}$ of $\\mu$ and $\\hat{\\sigma}$ of $\\sigma$" -->
-<!-- ``` -->
-
-<!-- ```{r confidence_interval_can-hint-2} -->
-<!-- can_sample <- can_container[1:1000] -->
-<!-- mu <- mean(can_sample) -->
-<!-- sigma <- sd(can_sample) -->
-<!-- t_alpha2 <- qt(0.975, df = 999) -->
-<!-- ``` -->
-
-<!-- ```{r confidence_interval_can-solution} -->
-<!-- can_sample <- can_container[1:1000] -->
-<!-- mu <- mean(can_sample) -->
-<!-- sigma <- sd(can_sample) -->
-<!-- t_alpha2 <- qt(0.975, df = 999) -->
-<!-- ## lower bound -->
-<!-- mu - sigma * t_alpha2 / sqrt(1000) -->
-<!-- ## upper bound -->
-<!-- mu + sigma * t_alpha2 / sqrt(1000) -->
-<!-- ``` -->
-
-<!-- ### Understanding confidence intervals (II) -->
-
-<!-- Confidence interval are a bit tricky to understand: -->
-
-<!-- - the interval $CI(1-\alpha) = \left[ \bar{Y} \pm \frac{S}{\sqrt{n}} t_{n-1, 1 - \frac{\alpha}{2}} \right]$ is a random variable -->
-<!-- - but $\mu$ is a real number -->
-
-<!-- Therefore, when replacing $\bar{Y}$ and $S$ with $\hat{\mu}$ and $\hat{\sigma}$ to compute the confidence interval, $\mu$ is either *inside* $\left[ \hat{\mu} \pm \frac{\hat{\sigma}}{\sqrt{n}} t_{n-1, 1 - \frac{\alpha}{2}} \right]$ or *outside*. The proper way to understand confidence intervals is to remember that _$IC(1-\alpha)$ covers $\mu$ with probability 1-$\alpha$_. Stated differently, on average a fraction $1 - \alpha$ of the confidence intervals you compute will *contain* the real value $\mu$.  -->
-
-<!-- Let's illustrate that with 100 estimates $\hat{\mu}$ of $\mu$ and the corresponding confidence interval of level 0.95. Each estimate $\hat{\mu}$ is a point, each confidence interval is a linerange, the true value of $\mu$ is indicated by the red line and the confidence intervals are colored in black if they cover the true value and in red if they don't. In this (perfect) example, 5% of the 95% CI do not cover $\mu$.  -->
-
-
-
-<!-- ```{r plot_ci} -->
-<!-- plot_ci <- function(n_estimates = 100, sample_size = 500, alpha = 0.05) { -->
-<!--   t_alpha <- qt(1 - alpha/2, df = sample_size - 1) -->
-<!--   tibble(estimate_nb = 1:n_estimates) %>%  -->
-<!--     mutate(sample    = map(estimate_nb, ~ sample(can_container, sample_size)),  -->
-<!--            mu_hat    = map_dbl(sample, mean),  -->
-<!--            sigma_hat = map_dbl(sample, sd),  -->
-<!--            ymin      = mu_hat - t_alpha * sigma_hat / sqrt(sample_size),  -->
-<!--            ymax      = mu_hat + t_alpha * sigma_hat / sqrt(sample_size),  -->
-<!--            covers    = if_else(ymin <= 330 & ymax >= 330, TRUE, FALSE)) %>%  -->
-<!--     select(-sample) %>%  -->
-<!--     ggplot(aes(x = estimate_nb, y = mu_hat,  -->
-<!--                ymin = ymin, ymax = ymax, color = covers)) +  -->
-<!--     geom_point() +  -->
-<!--     geom_linerange() + -->
-<!--     geom_hline(yintercept = 330, color = "red") +  -->
-<!--     scale_color_manual(values = c("TRUE" = "black", "FALSE" = "darkred"), name = expression(CI(1-alpha)~covers~mu)) +  -->
-<!--     labs(x = "Repetition",  -->
-<!--          y = expression(hat(mu)%+-%frac(hat(sigma), sqrt(n))*t[list(n-1,1-alpha/2)])) + -->
-<!--     theme(legend.background = element_rect(fill = "transparent"),  -->
-<!--           legend.position = "bottom") +  -->
-<!--     ggtitle(bquote(.(n_estimates) ~ "CI at level 1-" ~ alpha== .(1-alpha) ~ "for samples of size" ~ .(sample_size))) -->
-<!-- } -->
-<!-- ``` -->
-
-<!-- ```{r plot_ci_demo} -->
-<!-- set.seed(44) -->
-<!-- plot_ci(100, 500, 0.05) -->
-<!-- ``` -->
-
-<!-- `plot_ci()` (used for the previous graph) allows you to compute and plot `n_estimates` intervals of confidence level 1 - `alpha` from samples of size `sample_size` ($n$). Use it to explore the relation between $n$, $\alpha$, the length of $CI(1-\alpha)$ and the probability that it covers $\mu$.  -->
-
-<!-- ```{r plot_ci_exo, exercise = TRUE} -->
-<!-- plot_ci(n_estimates = 200, sample_size = 500, alpha = 0.05) -->
-<!-- ``` -->
-
-<!-- ```{r q6} -->
-<!-- question("The confidence interval is always centered around $\\hat{\\mu}$.",  -->
-<!--          answer("true"),  -->
-<!--          answer("false", correct = TRUE),  -->
-<!--          post_message = "As seen earlier, you can build asymetric CI if you don't choose $\\beta == \\alpha/2$. Furthermore, even if doing so, the resulting interval may not be centered around $\\hat{\\mu}$ (remember the $\\chi^2$ distribution.")  -->
-<!-- ``` -->
-
-<!-- ```{r q7} -->
-<!-- question("In this example, the optimal confidence interval is centered around $\\hat{\\mu}$.",  -->
-<!--          answer("true", correct = TRUE),  -->
-<!--          answer("false"),  -->
-<!--          post_message = "Indeed, the optimal (here narrowest) confidence interval is achieved when choosing $\\beta == \\alpha/2$ and results in symmetric intervals.")  -->
-<!-- ``` -->
-
-<!-- ```{r q8} -->
-<!-- question("If I build 100 $CI(0.95)$ from 100 different random samples, only 5 of them do not cover $\\mu$",  -->
-<!--          answer("true", correct = FALSE),  -->
-<!--          answer("false", correct = TRUE),  -->
-<!--          post_message = "On average, 5% of the 95% confidence interval do not cover $\\mu$ but it's only true on average, not for all sets of confidence intervals.")  -->
-<!-- ``` -->
