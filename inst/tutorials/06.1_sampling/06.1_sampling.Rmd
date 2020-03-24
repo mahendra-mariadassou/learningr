@@ -24,6 +24,28 @@ compute_estimate <- function(n) {
 estimates_data <- crossing(sample_size = c(10, 50, 100, 500, 1000, 5000), 
                            estimate_number = 1:100) %>% 
   mutate(estimate_value = map_dbl(sample_size, compute_estimate))
+plot_ci <- function(n_estimates = 100, sample_size = 500, alpha = 0.05) {
+  t_alpha <- qt(1 - alpha/2, df = sample_size - 1)
+  tibble(estimate_nb = 1:n_estimates) %>% 
+    mutate(sample    = map(estimate_nb, ~ sample(can_container, sample_size)), 
+           mu_hat    = map_dbl(sample, mean), 
+           sigma_hat = map_dbl(sample, sd), 
+           ymin      = mu_hat - t_alpha * sigma_hat / sqrt(sample_size), 
+           ymax      = mu_hat + t_alpha * sigma_hat / sqrt(sample_size), 
+           covers    = if_else(ymin <= 330 & ymax >= 330, TRUE, FALSE)) %>% 
+    select(-sample) %>% 
+    ggplot(aes(x = estimate_nb, y = mu_hat, 
+               ymin = ymin, ymax = ymax, color = covers)) + 
+    geom_point() + 
+    geom_linerange() +
+    geom_hline(yintercept = 330, color = "red") + 
+    scale_color_manual(values = c("TRUE" = "black", "FALSE" = "darkred"), name = expression(CI(1-alpha)~covers~mu)) + 
+    labs(x = "Repetition", 
+         y = expression(hat(mu)%+-%frac(hat(sigma), sqrt(n))*t[list(n-1,1-alpha/2)])) +
+    theme(legend.background = element_rect(fill = "transparent"), 
+          legend.position = "bottom") + 
+    ggtitle(bquote(.(n_estimates) ~ "CI at level 1-" ~ alpha== .(1-alpha) ~ "for samples of size" ~ .(sample_size)))
+}
 tutorial_options(exercise.timelimit = 60, exercise.checker = checker)
 knitr::opts_chunk$set(echo = FALSE)
 ```
@@ -209,7 +231,8 @@ question(
   answer("It increases with $n$"), 
   answer("It decreases with $n$", correct = TRUE),
   answer("It decreases as $1/n$", message = "Check carefully the scale of the x- and y-axes"), 
-  answer("It decreases as $1/\\sqrt{n}$", correct = TRUE)
+  answer("It decreases as $1/\\sqrt{n}$", correct = TRUE), 
+  allow_retry = TRUE
   )
 ```
 
@@ -220,7 +243,8 @@ question(
   answer("100"),
   answer("500", message = "Not quite, since the standard deviation is ~ 0.66, the typical spread will be at least 1.32 and you won't get accuracy 1"),
   answer("1000", correct = TRUE, message = "Since the standard deviation is ~ 0.45, the typical spread will be 0.9, lower than 1"), 
-  answer("5000", correct = TRUE, message = "Since the standard deviation is ~ 0.208, the typical spread will be 0.42, lower than 1")
+  answer("5000", correct = TRUE, message = "Since the standard deviation is ~ 0.208, the typical spread will be 0.42, lower than 1"), 
+  allow_retry = TRUE
   )
 ```
 
@@ -285,7 +309,7 @@ estimates_convergence
 
 And plot the convergence of $\hat{\mu}$ to $\mu$ as a $n \to \infty$. 
 
-```{r estimates_convergence_plot, exercise = TRUE}
+```{r estimates_convergence_plot, exercise = TRUE, exercise.setup = "estimates_convergence"}
 ggplot(...)
 ```
 
@@ -352,7 +376,7 @@ plot_norm_interval <- function(beta, alpha = 0.05) {
 }
 ```
 
-```{r plot_norm_interval-exercise, exercise = TRUE, exercise.setup = "plot_interval"}
+```{r plot_norm_interval-exercise, exercise = TRUE, exercise.setup = "plot_norm_interval"}
 plot_norm_interval(beta = 0.025, alpha = 0.05)
 ```
 
@@ -494,33 +518,6 @@ Confidence interval are a bit tricky to understand:
 Therefore, when replacing $\bar{Y}$ and $S$ with $\hat{\mu}$ and $\hat{\sigma}$ to compute the confidence interval, $\mu$ is either *inside* $\left[ \hat{\mu} \pm \frac{\hat{\sigma}}{\sqrt{n}} t_{n-1, 1 - \frac{\alpha}{2}} \right]$ or *outside*. The proper way to understand confidence intervals is to remember that _$IC(1-\alpha)$ covers $\mu$ with probability 1-$\alpha$_. Stated differently, on average a fraction $1 - \alpha$ of the confidence intervals you compute will *contain* the real value $\mu$. 
 
 Let's illustrate that with 100 estimates $\hat{\mu}$ of $\mu$ and the corresponding confidence interval of level 0.95. Each estimate $\hat{\mu}$ is a point, each confidence interval is a linerange, the true value of $\mu$ is indicated by the red line and the confidence intervals are colored in black if they cover the true value and in red if they don't. In this (perfect) example, 5% of the 95% CI do not cover $\mu$. 
-
-
-
-```{r plot_ci}
-plot_ci <- function(n_estimates = 100, sample_size = 500, alpha = 0.05) {
-  t_alpha <- qt(1 - alpha/2, df = sample_size - 1)
-  tibble(estimate_nb = 1:n_estimates) %>% 
-    mutate(sample    = map(estimate_nb, ~ sample(can_container, sample_size)), 
-           mu_hat    = map_dbl(sample, mean), 
-           sigma_hat = map_dbl(sample, sd), 
-           ymin      = mu_hat - t_alpha * sigma_hat / sqrt(sample_size), 
-           ymax      = mu_hat + t_alpha * sigma_hat / sqrt(sample_size), 
-           covers    = if_else(ymin <= 330 & ymax >= 330, TRUE, FALSE)) %>% 
-    select(-sample) %>% 
-    ggplot(aes(x = estimate_nb, y = mu_hat, 
-               ymin = ymin, ymax = ymax, color = covers)) + 
-    geom_point() + 
-    geom_linerange() +
-    geom_hline(yintercept = 330, color = "red") + 
-    scale_color_manual(values = c("TRUE" = "black", "FALSE" = "darkred"), name = expression(CI(1-alpha)~covers~mu)) + 
-    labs(x = "Repetition", 
-         y = expression(hat(mu)%+-%frac(hat(sigma), sqrt(n))*t[list(n-1,1-alpha/2)])) +
-    theme(legend.background = element_rect(fill = "transparent"), 
-          legend.position = "bottom") + 
-    ggtitle(bquote(.(n_estimates) ~ "CI at level 1-" ~ alpha== .(1-alpha) ~ "for samples of size" ~ .(sample_size)))
-}
-```
 
 ```{r plot_ci_demo}
 set.seed(44)
