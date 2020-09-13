@@ -5,6 +5,7 @@
 
 <!-- badges: start -->
 
+[![binder](https://github.com/mahendra-mariadassou/learningr/workflows/binder/badge.svg)](https://mybinder.org/v2/gh/mahendra-mariadassou/learningr/master)
 <!-- badges: end -->
 
 The goal of learningr is to provide interactive tutorials for the

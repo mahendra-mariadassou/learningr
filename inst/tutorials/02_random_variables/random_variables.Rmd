@@ -246,6 +246,15 @@ jar <- rep(c(1, 4, 8), times = c(10, 5, 1))
 first_and_second_diamonds <- sample(x = jar, )
 ```
 
+```{r sampling_wo_replacement-hint-1}
+"Look at the `size` and the `replace` arguments"
+```
+
+```{r sampling_wo_replacement-hint-2}
+jar <- rep(c(1, 4, 8), times = c(10, 5, 1))
+first_and_second_diamonds <- sample(x = jar, size = )
+```
+
 ```{r sampling_wo_replacement-solution}
 jar <- rep(c(1, 4, 8), times = c(10, 5, 1))
 first_and_second_diamonds <- sample(x = jar, size = 2, replace = FALSE)
@@ -700,3 +709,8 @@ quantile(x = , probs = )
 quantile(x = large_jar, probs = 0.5)
 ```
 
+## Classic probability distributions
+
+### Normal distribution (also called standard distribution)
+
+### Chi-square ($\chi^2$) distribution
