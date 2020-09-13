@@ -45,6 +45,14 @@ On **Windows**: you may need **Rtools** and **git**
     [page](https://git-scm.com/download/win), download the suggested exe
     and install it on your computer
 
+Alternatively, you can use create a remote R session to complete the
+tutorial by launching binder:
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mahendra-mariadassou/learningr/master?urlpath=rstudio)
+
+You only need a web browser, no account or anything. The main drawback
+of this solution (compared to the previous ones) is that you lose your
+progress each time you launch a new session.
+
 ## Starting a tutorial
 
 This package is intended for use with `learnr`:
