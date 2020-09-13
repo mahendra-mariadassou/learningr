@@ -9,7 +9,7 @@
 <!-- badges: end -->
 
 The goal of learningr is to provide interactive tutorials for the
-statistics classes given by Tristan for UE 2.4. The tutorial are
+statistics classes given by Tristan for UE 2.3. The tutorial are
 shamelessly taken from
 [rstudio-education](https://rstudio.cloud/learn/primers) for the basics
 of R and the tidyverse. Tutorials are packaged so you can install them

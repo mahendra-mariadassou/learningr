@@ -19,7 +19,7 @@ knitr::opts_chunk$set(
 [![binder](https://github.com/mahendra-mariadassou/learningr/workflows/binder/badge.svg)](https://mybinder.org/v2/gh/mahendra-mariadassou/learningr/master)
 <!-- badges: end -->
 
-The goal of learningr is to provide interactive tutorials for the statistics classes given by Tristan for UE 2.4. The tutorial are shamelessly taken from [rstudio-education](https://rstudio.cloud/learn/primers) for the basics of R and the tidyverse. Tutorials are packaged so you can install them on you computer and do the exercices without access to an internet connection. 
+The goal of learningr is to provide interactive tutorials for the statistics classes given by Tristan for UE 2.3. The tutorial are shamelessly taken from [rstudio-education](https://rstudio.cloud/learn/primers) for the basics of R and the tidyverse. Tutorials are packaged so you can install them on you computer and do the exercices without access to an internet connection. 
 
 ## Installation
 
