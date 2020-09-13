@@ -1,7 +1,0 @@
-name: learningr
-channels:
-  - conda-forge
-dependencies:
-  - r-base=3.6.3
-  - r-tidyverse
-  - r-learnr
