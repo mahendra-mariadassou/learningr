@@ -18,23 +18,48 @@ connection.
 
 ## Installation
 
-You can install the development version from
-[GitHub](https://github.com/) with:
+### Local installation
 
-``` r
-# install.packages("remotes")
-remotes::install_github("mahendra-mariadassou/learningr")
+You only need to perform each of the following steps **once**:
+
+  - installing **R**
+  - installing **Rstudio**
+  - installing **R** packages `remotes` and `learnr`
+
+However each of them may take some time.
+
+#### Installing R
+
+Go to the CRAN [webpage](https://cran.r-project.org/), select your OS
+and follow the instructions.
+
+  - On Windows, you should just download and execute an .exe file.
+  - On MacOS, you should just download and execute a .pkg file.
+  - On Linux, you can get install R from the command line using
+    something like
+
+<!-- end list -->
+
+``` bash
+## If you're on Ubuntu
+sudo apt-get install r-base
 ```
 
-<!-- If the installation of `devtools` fails, you may need to install some system dependencies (for example on ubuntu/debian): -->
+#### Installing RStudio Desktop
 
-<!-- ```{bash, eval = FALSE} -->
+Go to the
+[download](https://rstudio.com/products/rstudio/download/#download)
+page. Select, download and install the file corresponding to your OS.
 
-<!-- sudo apt-get install libxml2-dev libcurl4-openssl-dev libssl-dev -->
+#### Installing R packages
 
-<!-- ``` -->
+Launch Rstudio (by clicking on the corresponding icon) and execute the
+following commands in the console
 
-<!-- On Mac, you may need some of the compiling tools listed [here](https://cran.r-project.org/bin/macosx/tools/) -->
+``` r
+install.packages("remotes") 
+install.packages("learnr") 
+```
 
 On **Windows**: you may need **Rtools** and **git**
 
@@ -45,13 +70,35 @@ On **Windows**: you may need **Rtools** and **git**
     [page](https://git-scm.com/download/win), download the suggested exe
     and install it on your computer
 
-Alternatively, you can use create a remote R session to complete the
-tutorial by launching binder:
+On **MacOS**: you may need **XCode**
+
+  - **XCode**: visit the dedicated
+    [page](https://mac.r-project.org/tools/), download the **Mandatory
+    tools** and install them on your computer
+
+#### Installation (II)
+
+You need to install the tutorials **every time** there is an update
+(hopefully not too often)
+
+### Installing the tutorials
+
+You can install the tutorials from [GitHub](https://github.com/) by
+launching Rstudio and typing the following command in the console:
+
+``` r
+remotes::install_github("mahendra-mariadassou/learningr")
+```
+
+Alternatively, you can use a remote R session to complete the tutorial
+by launching binder:
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mahendra-mariadassou/learningr/master?urlpath=rstudio)
 
-You only need a web browser, no account or anything. The main drawback
-of this solution (compared to the previous ones) is that you lose your
-progress each time you launch a new session.
+You only need a web browser, no account or anything and the tutorials
+will always be up to date. The main drawbacks of this solution (compared
+to the previous one) are that (i) you lose your progress each time you
+launch a new session and (ii) the binder image may take some time to
+launch (usually a few minutes).
 
 ## Starting a tutorial
 
@@ -99,4 +146,16 @@ learnr::run_tutorial("05.3_summaries", package = "learningr")
 ``` r
 learnr::run_tutorial("06.1_sampling", package = "learningr")
 learnr::run_tutorial("06.2_testing", package = "learningr")
+```
+
+## Troubleshooting
+
+If you have an error when launching a vignette (it may happen on Windows
+with R 4.0.0), try this syntax (illustrated on the first vignette):
+
+``` r
+rmarkdown::run(file = NULL, 
+               dir = learnr:::get_tutorial_path("01_programming_basics",  
+                                                package = "learningr"), 
+               shiny_args = list(launch.browser = 1))
 ```
