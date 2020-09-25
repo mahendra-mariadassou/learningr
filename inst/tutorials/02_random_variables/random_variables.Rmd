@@ -600,7 +600,7 @@ quiz(caption = "Cumulative distribution function",
 
 Using the tools you learned last lesson, compute $F_Y(3)$. 
 
-```{r cdf_large_jar, exercice = TRUE}
+```{r cdf_large_jar, exercise = TRUE}
 
 ```
 
@@ -709,8 +709,8 @@ quantile(x = , probs = )
 quantile(x = large_jar, probs = 0.5)
 ```
 
-## Classic probability distributions
+<!-- ## Classic probability distributions -->
 
-### Normal distribution (also called standard distribution)
+<!-- ### Normal distribution (also called standard distribution) -->
 
-### Chi-square ($\chi^2$) distribution
+<!-- ### Chi-square ($\chi^2$) distribution -->
