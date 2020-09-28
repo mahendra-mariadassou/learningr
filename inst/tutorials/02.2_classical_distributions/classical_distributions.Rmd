@@ -1,0 +1,692 @@
+---
+title: "Classical distributions"
+output: 
+  learnr::tutorial:
+    progressive: true
+    allow_skip: true
+runtime: shiny_prerendered
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+library(dplyr)
+library(ggplot2)
+data(pres2017)
+knitr::opts_chunk$set(echo = FALSE)
+## Variables shared by all exercices
+set.seed(1)
+theme_set(theme_bw())
+plot_normal_density <- function(mu, sigma) {
+  tibble(x = seq(-10, 10, by = 0.1), 
+         y = dnorm(x, mean = mu, sd = sigma)) %>% 
+    ggplot(aes(x = x, y = y)) + geom_line() + 
+    ggtitle(paste0("Density of N(", mu, ",", sigma, ")"))
+}
+```
+
+## Welcome to this class
+
+### Learning goals
+
+The goal of this class is to acquaint yourself with two very classical distributions:
+
+- the gaussian distribution (also called normal distribution) 
+- the $\chi^2$ (chi-square) distribution
+
+We'll give standard results on those distributions, illustrate how to compute various quantities (density function, quantiles and cumulative distribution function) using R and illustrate how to generate draws from those distributions. 
+
+## The Gaussian distribution
+
+### Overview
+
+Normal (or Gaussian) distributions are very important in statistics as they are often used to represent natural phenomena. Its huge importance is partly due to the central limit theorem that states, under some conditions, the average of many observations behaves as a random variable with gaussian distributions. 
+
+It can also serve as a reasonable approximation for the distribution of many real-life quantities. Consider the following histogram, representing the number of registered voters in each of the 896 voting booth (also known as booth size) of Paris (stored in the data set `pres2017`). The distribution of booth sizes has a mode around 1450 most booth are not too far away from this value. This distribution is reasonably approximated by a Gaussian distribution $\mathcal{N}(\mu, \sigma)$ with parameters $\mu = 1452$ and $\sigma = 169$ (in red in the graph). Intuitively, $\mu$ is the typical voting booth size whereas $\sigma$ is the typical spread of booth sizes around that size. 
+
+```{r echo = FALSE}
+data(pres2017)
+ggplot(pres2017, aes(x = Inscrits)) + 
+  geom_histogram(aes(y = ..density..), binwidth = 20) + 
+  stat_function(fun = dnorm, 
+                args = list(mean = mean(pres2017$Inscrits), sd = sd(pres2017$Inscrits)), 
+                color = "red")
+```
+
+For the same reasons, the gaussian distribution is also widely used to model measurement errors in physics. 
+
+### Formal definition 
+
+A real-valued continuous random variable $X$ is said to have a normal distribution $\mathcal{N}(\mu, \sigma^2)$, written $X \sim \mathcal{N}(\mu, \sigma^2)$, of mean $\mu$ and standard deviation $\sigma$ if its probability density function is:
+
+$$
+f_{\mu, \sigma}(x) = \frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{(x - \mu)^2}{2\sigma^2}}
+$$
+In other words, the probability that $X$ takes values in an infinitesimal interval of size $dx$ around $x$ is
+$$
+\mathbb{P}\left( X \in \left[x - \frac{dx}{2}, x + \frac{dx}{2} \right] \right) = f_{\mu, \sigma}(x)dx
+$$
+When moving to non infinitesimal intervals of the form $[a, b]$, we can simply integrate the previous equality over $x$ to obtain
+
+$$
+\mathbb{P}(X \in [a, b]) = \int_{x = a}^{x = b} f_{\mu, \sigma}(x)dx
+$$
+The _density function_ $f_{\mu, \sigma}$ of $\mathcal{N}(\mu, \sigma)$ can be computed with the function `dnorm()` (`d` stands for density and `norm` for normal distribution). The special case $\mu = 0$ and $\sigma = 1$ is very important and corresponds to the so called _standard normal distribution_. 
+
+Use `dnorm()` to compute $f_{\mu, \sigma}(x)$ for various values of $\mu$ (argument `mean`), $\sigma$ (argument `sd`) and $x$. 
+
+```{r dnorm, exercise = TRUE}
+dnorm(x = 0, mean = 0, sd = 1)
+```
+
+```{r q1}
+quiz(
+  question("$f_{0, 1}(.)$ is maximum for", 
+           answer("$x = 0$", TRUE), 
+           answer("$x = 1$"), 
+           answer("None of the above"), 
+           allow_retry = TRUE), 
+  question("For fixed $\\mu$$ and fixed $x$, when $\\sigma$$ increases, $f_{\\mu, \\sigma}(x)$", 
+           answer("increases"), 
+           answer("decreases"), 
+           answer("It depends", TRUE), 
+           allow_retry = TRUE), 
+  question("For fixed $\\mu$$ and fixed $x$, when $\\sigma$$ increases, $f_{\\mu, \\sigma}(x)$", 
+           answer("increases"), 
+           answer("decreases"), 
+           answer("It depends", TRUE), 
+           allow_retry = TRUE)
+)
+```
+
+### Density function
+
+The function `plot_normal_density()` allows you to plot $f_{\mu, \sigma}$ over $[-10, 10]$ for various values of $\mu$ and $\sigma$. Use it to get a feeling of the normal distribution. Try to find simple relationships between the different functions $f_{\mu, \sigma}$. 
+
+```{r plot_normal_density, exercise = TRUE}
+plot_normal_density(mu = 0, sigma = 1)
+```
+
+### Algebraic properties 
+
+The previous exercice suggested that when changing $\mu$ and keeping $\sigma$ unmodified, we simply translate the curves:
+
+```{r density_curves, echo = FALSE}
+purrr::map(-4:4, ~ tibble(x = seq(-10, 10, by = 0.1), 
+                          y = dnorm(x, mean = .x, sd = 1))) %>% 
+  bind_rows(.id = 'mu') %>% 
+  mutate(mu = (-4:4)[as.integer(mu)]) %>% 
+  ggplot(aes(x = x, y = y, group = mu, color = mu)) + geom_line() + 
+  labs(y = expression(f[list(mu,sigma)])) + 
+  scale_color_distiller(name = expression(mu))
+```
+
+And you can check numerically that $f_{\mu, \sigma}(x) = f_{\mu + h, \sigma}(x + h)$ for all $x$, $h$, $\mu$ and $\sigma$
+```{r translation, exercise = TRUE}
+x <- 1
+h <- 1
+mu <- 0
+sigma <- 1
+dnorm(x = x+h, mean = mu + h, sd = sigma) - dnorm(x = x, mean = mu, sd = sigma)
+```
+
+
+And we can check it formally:
+$$
+f_{\mu+h, \sigma}(x+h) d(x+h) = \frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{(x+h - (\mu+h))^2}{2\sigma^2}} dx= \frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{(x - \mu)^2}{2\sigma^2}} dx = f_{\mu, \sigma}(x)dx
+$$
+In other words, if $X \sim \mathcal{N}(\mu, \sigma^2)$, then $X \sim \mathcal{N}(\mu + h, \sigma^2)$
+
+We can even go further and show that 
+$$
+f_{a\mu+h, a\sigma}(ax+h) d(ax+h)= \frac{1}{a\sigma\sqrt{2\pi}}e^{-\frac{(ax+h - (a\mu+h))^2}{2\sigma^2}} adx= \frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{(x - \mu)^2}{2\sigma^2}} dx = f_{\mu, \sigma}(x)dx
+$$
+In other words, if $X \sim \mathcal{N}(\mu, \sigma)$, then $aX + h \sim \mathcal{N}(a\mu + h, a^2\sigma^2)$
+
+
+### Mean and variance
+
+### Quantiles and distribution function
+
+
+### Diamonds in a jar 
+
+Let's consider a different example. Imagine a jar filled with diamonds of different sizes. The jar contains: 
+
+- 10 diamonds of size 1
+- 5  diamonds of size 4
+- 1  diamond  of size 8
+
+Using the function `rep()` (look at the help to see how it works), create a vector `jar` that encodes the content of the jar. Each element of `jar` should be a diamond and `jar[i]` should be the size of the $i$-th diamond. 
+
+One solution would be `jar <- c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 4, 4, 4, 4, 8)` but we want to do less typing. 
+
+```{r rep, exercise = TRUE}
+jar <- rep()
+```
+
+```{r rep-hint-1}
+"Look at the examples and the \"times\" arguments"
+```
+
+```{r rep-hint-2}
+jar <- rep(c(1, 4, 8), times = )
+```
+
+```{r rep-hint-solution}
+jar <- rep(c(1, 4, 8), times = c(10, 5, 1))
+```
+
+Complete the code to draw one diamond from the jar. 
+
+```{r draw, exercise = TRUE}
+jar <- rep()
+first_diamond <- sample(x = , size = )
+```
+
+```{r draw-solution}
+jar <- rep(c(1, 4, 8), times = c(10, 5, 1))
+first_diamond <- sample(x = jar, size = 1)
+```
+
+Imagine that you were lucky and picked the big diamond (the one of size 8) during your first draw. 
+
+Write the code to draw a second diamond from the jar. 
+
+```{r draw_sec_diamond, exercise = TRUE}
+jar <- rep()
+second_diamond <- sample(x = , size = )
+```
+
+```{r draw_sec_diamond-hint-1}
+"Think carefully about the current content of the jar"
+```
+
+```{r draw_sec_diamond-hint-2}
+jar <- rep(c(1, 4), times = c(10, 5))
+second_diamond <- sample(x = , size = )
+```
+
+```{r draw_sec_diamond-solution}
+jar <- rep(c(1, 4), times = c(10, 5))
+second_diamond <- sample(x = jar, size = 1)
+```
+
+### Diamonds in a jar (II)
+
+The previous example illsutrated **sampling without replacement**: the first draw modifies the content of the jar and hence, the second draw. 
+
+We drew two diamonds (`first_diamond` and `second_diamond`) sequentially but you can do it all at once using `sample()`. Try to do it by completing the following code:
+
+```{r sampling_wo_replacement, exercise = TRUE}
+jar <- rep(c(1, 4, 8), times = c(10, 5, 1))
+first_and_second_diamonds <- sample(x = jar, )
+```
+
+```{r sampling_wo_replacement-hint-1}
+"Look at the `size` and the `replace` arguments"
+```
+
+```{r sampling_wo_replacement-hint-2}
+jar <- rep(c(1, 4, 8), times = c(10, 5, 1))
+first_and_second_diamonds <- sample(x = jar, size = )
+```
+
+```{r sampling_wo_replacement-solution}
+jar <- rep(c(1, 4, 8), times = c(10, 5, 1))
+first_and_second_diamonds <- sample(x = jar, size = 2, replace = FALSE)
+```
+
+### Finite versus infinite populations
+
+The biggest difference between finite populations (diamonds) and infinite populations (dice throws) is that you can throw a dice infinitely many times but you run out of diamonds at some point. 
+
+In particular:
+
+- the results of 10 dice throws are likely to differ whereas
+- you end up with the **exact same** diamonds if you pick 16 diamonds from the previous jar (although you may pick them in differnt orders). 
+
+Futhermore, whenever the random variable is associated to a **finite population**, it is **discrete**. Indeed if the population has size $N$, the random variables takes at most $N$ different values (and often less than that, as in our diamond example). 
+
+```{r diamond_rv}
+question("Note X the size of a diamond picked at random from the previous jar. How many different values can X take?", 
+         answer("16", message = "There are indeed 16 diamonds but are there 16 different sizes?"), 
+         answer("1"), 
+         answer("3", TRUE), 
+         answer("8"), 
+         allow_retry = TRUE)
+```
+
+## Descriptors of random variables
+
+### Overview
+
+We're going to illustrate the notions of
+
+- Probability distribution
+- Expectation
+- Standard deviation
+- Cumulative distribution function
+
+on finite populations using our diamonds in a jar example. Those concepts can be extended to infinite populations (or equivalently random variables that can take infinitely many values) but we'll leave that for later. 
+
+Hereafter, we note $X$ (the random variable corresponding to) the size of a diamond picked at random from the jar. 
+
+## Probability distribution
+
+### Theory
+
+```{r omega}
+question("Select all possible values for X:", 
+         answer("1", TRUE), 
+         answer("4", TRUE), 
+         answer("5", FALSE, message = "No diamond has size 5."), 
+         answer("8", TRUE), 
+         answer("10", FALSE, message = "No diamond has size 10."), 
+         allow_retry = TRUE)
+```
+
+The set of all possible values for $X$ (i.e. diamond sizes) is noted $\Omega = \{x_1, x_2, x_3\}$. 
+
+The probability distribution function (or pdf) of $X$ if the function:
+$$
+x \in \Omega \mapsto \mathbb{P}(X = x)
+$$
+which associates to each diamond size the probability of picking a diamond of that size. 
+
+```{r pdf_quizz}
+quiz(
+  question("How much is $\\mathbb{P}(X = 0)$", 
+           answer("0", TRUE), 
+           answer("5/8"), 
+           answer("5/16"), 
+           answer("1/16"), 
+           answer("1")), 
+  question("How much is $\\mathbb{P}(X = 8)$", 
+           answer("0"), 
+           answer("1/8"), 
+           answer("1/16", TRUE), 
+           answer("1"))
+)
+```
+
+```{r pdf_quizz_2}
+question("Select all possible values for $\\mathbb{P}(X = x)$:", 
+         answer("0", TRUE),
+         answer("1/16", TRUE),
+         answer("1/8"),
+         answer("1/4"),
+         answer("5/16", TRUE),
+         answer("5/8", TRUE),
+         answer("1"), 
+         allow_retry = TRUE)
+```
+
+There is no straighforward way to build the pdf of $X$ (there is for standard random variables). You can however build a related quantity: the frequency of different diamond sizes in the full populations using `table()` 
+
+```{r table-example}
+jar <- rep(c(1, 4, 8), times = c(10, 5, 1))
+table(jar)
+```
+
+We consider a larger jar, whose content is stored in `large_jar` and note $Y$ the size of a diamond picked at random from the large jar. 
+
+```{r large_jar, exercise = TRUE, exercise.eval = TRUE}
+large_jar
+```
+
+```{r large_jar-solution}
+table(large_jar)
+```
+
+Use `table()` in the previous chunck to answer the following questions:
+
+```{r large_jar_question}
+quiz(caption = "Large diamond jar", 
+  question("How many diamonds are stored in the large jar?", 
+           answer("16"), 
+           answer("66"),
+           answer("200", TRUE)),
+  question("Select all diamond sizes in the large jar", 
+           answer("1", TRUE), 
+           answer("3", TRUE), 
+           answer("4"), 
+           answer("8"), 
+           answer("9", TRUE), 
+           allow_retry = TRUE),
+  question("How much is $\\mathbb{P}(Y = 1)$ ?", 
+           answer("5/8"), 
+           answer("1/66"),
+           answer("33/100", TRUE)) 
+)
+```
+
+### Expectation
+
+
+The **expectation** of a random variable $X$, noted $\mathbb{E}(X)$, is its average value. Assume that $X$ is associated to a population of size $N$ and that individual $i$ has value $x_i$, so that 
+
+- $X = x_i$ whenever you pick individual $i$. 
+- $\mathbb{P}(X = x)$ is the fraction of individuals with value $x$, i.e. $\frac{\#\{i \text{ such that } x_i = x\}}{N}$
+
+You can compute it using a formula based either on the full set of values $(x_i)_{i = 1\dots N}$ :
+$$
+\mathbb{E}(X) = \frac{1}{N}\sum_{i = 1}^N x_i
+$$
+or the probability distribution:
+$$
+\mathbb{E}(X) = \sum_{x \in \Omega} x \mathbb{P}(X = x)
+$$
+
+In our (small) jar example, the first formula gives:
+$$
+\mathbb{E}(X) = \frac{1}{16} \left( \underbrace{1 + \dots + 1}_{\times 10} + \underbrace{4 + \dots + 4}_{\times 5} + \underbrace{8}_{\times 1} \right) = 2.375
+$$
+
+You can of course simplify it to the second formula 
+$$
+\mathbb{E}(X) = 1 \times \underbrace{\frac{10}{16}}_{\mathbb{P}(X = 1)} + 4 \times \underbrace{\frac{5}{16}}_{\mathbb{P}(X = 4)} + 8 \times \underbrace{\frac{1}{16}}_{\mathbb{P}(X = 8)} = 2.375
+$$
+and obtain the same result. 
+
+Graphically we have:
+```{r jar_barplot}
+ggplot(data.frame(id = 1:length(jar), size = jar), 
+       aes(x = size)) + 
+  geom_bar() + 
+  scale_y_continuous(breaks = seq(0, 10, 2)) + 
+  geom_vline(xintercept = mean(jar), color = "red") +
+  annotate("text", x = mean(jar), y = 9, color = "red", 
+           hjust = -0.1, vjust = 1, label = "E(X): Average\ndiamond size ") + 
+  theme_bw() + 
+  labs(x = "Size", y = "Number of diamonds")
+```
+
+Look at the functions `sum()` and `length()` and compute $\mathbb{E}(Y)$ using the first formula
+
+```{r mean_exercice, exercise = TRUE}
+sum_of_y <- 
+length_of_y <- 
+expectation_of_y <- 
+expectation_of_y  
+```
+
+```{r mean_exercice-hint-1}
+sum_of_y <- sum(y)
+length_of_y <- 
+expectation_of_y <- 
+expectation_of_y  
+```
+
+```{r mean_exercice-hint-2}
+sum_of_y <- sum(y)
+length_of_y <- length(y)
+expectation_of_y <- 
+expectation_of_y  
+```
+
+```{r mean_exercice-solution}
+sum_of_y <- sum(y)
+length_of_y <- length(y)
+expectation_of_y <- sum_of_y / length_of_y
+expectation_of_y  
+```
+
+Now look at `mean()` and suggest an alternative way of computing $\mathbb{E}(Y)$. 
+
+```{r mean_final_formula, exercise = TRUE}
+expectation_of_y <- 
+expectation_of_y
+```
+
+```{r mean_final_formula-solution}
+expectation_of_y <- mean(large_jar)
+expectation_of_y
+```
+
+Computing $\mathbb{E}(Y)$ from the second formula is slightly more involved. The following code allows you to do it but is rarely used in practice. 
+
+```{r mean_second_formula}
+## Find values of Y 
+values_of_y <- as.numeric(names(table(large_jar)))
+values_of_y
+## Compute pdf of Y
+pdf_of_y <- table(large_jar) / length(large_jar)
+pdf_of_y
+expectation_of_y <- sum(values_of_y * pdf_of_y)
+```
+
+### Variance and Standard deviation
+
+The **variance** of $X$, noted $\mathbb{V}(X)$, is a measure of **dispersion around the mean** defined as the quadratic deviation around the mean. 
+
+Formally: 
+$$
+\mathbb{V}(X) = \mathbb{E}( \left[ X - \mathbb{E}(X) \right]^2) = \frac{1}{N} \sum_{i = 1}^N (x_i - \mathbb{E}(X))^2
+$$
+A famous equality shows that the variance can be computed using the much simpler formula
+$$
+\mathbb{V}(X) = \mathbb{E}(X^2) - \mathbb{E}(X)^2 = \frac{1}{N} \sum_{i=1}^N x_i^2 - \left(\frac{1}{N} \sum_{i=1}^N x_i \right)^2
+$$
+**Caution** Be very careful with the position of the exponents $^2$ and the parenthesis. 
+
+In our example:
+```{r var_example, echo = FALSE}
+plot_data <- data.frame(size = jar) %>% count(size, name = "count") %>% 
+  mutate(prob              = count / sum(count),
+         mean              = mean(jar), 
+         deviation         = size - mean, 
+         squared_deviation = deviation^2, 
+         squared_size      = size^2)
+```
+
+And we can compute the variance easily as:
+$$
+\begin{align}
+\mathbb{E}(X^2) & = 1^2 \times \frac{1}{16} + 4^2 \times \frac{5}{16} + 8^2 \times \frac{10}{16} = 9.625 \\
+\mathbb{E}(X)^2 & = \left( 1 \times \frac{1}{16} + 4 \times \frac{5}{16} + 8 \times \frac{10}{16} \right)^2 = 5.640625 \\
+\mathbb{V}(X) & = \mathbb{E}(X^2) - \mathbb{E}(X)^2 = 3.984375
+\end{align}
+$$
+
+```{r jar_variance, eval = FALSE, echo = FALSE}
+ggplot(plot_data, aes(x = squared_deviation, y = count)) + 
+  geom_bar(stat = "identity") + 
+  scale_y_continuous(breaks = seq(0, 10, 2)) + 
+  geom_vline(xintercept = var(jar), color = "red") +
+  annotate("text", x = var(jar), y = 9, color = "red", 
+           hjust = -0.1, vjust = 1, label = "V(X): Average\nquadratic deviation ") + 
+  theme_bw() + 
+  labs(x = "Quadratic deviation to the mean", y = "Number of diamonds")
+```
+
+Using `mean()` and the power function `^`, compute the variance of $Y$. 
+
+```{r variance_y, exercise = TRUE}
+var_of_y <- 
+var_of_y
+```
+
+```{r variance_y-solution}
+var_of_y <- mean(large_jar^2) - mean(large_jar)^2
+var_of_y
+```
+
+R provides the built-in function `var()` to compute the variance. Compare your result with one provided by `var()`
+
+```{r variance_y_with_var, exercise = TRUE}
+manu_var <- ## using the manual computation
+auto_var <- ## using var
+auto_var - manu_var
+```
+
+```{r variance_y_with_var-solution}
+manu_var <- mean(large_jar^2) - mean(large_jar)^2
+auto_var <- var(large_jar)
+auto_var - manu_var
+```
+
+It seems that there is a small but no null difference between the two quantities. That's normal. For reasons you'll understand later, the variance $\mathbb{V}_R(X)$ computed by `var()` (and by the same function in most computer languages) is slightly different from the one defined above. The two are related by the relation  
+
+$$
+\mathbb{V}_R(X) = \frac{N}{N-1} \mathbb{V}(X) = \frac{1}{N-1} \sum_{i=1}^N \left( x_i - \mathbb{E}(X) \right)^2
+$$
+
+As you can verify here
+```{r difference_var_variance, exercise = TRUE}
+N <- length(large_jar)
+manu_var <- 
+auto_var <- 
+auto_var - N * manu_var / (N - 1)
+```
+
+### Cumulative distribution function
+
+The cumulative distribution function (or cdf) of a numeric random variable $X$ is defined by:
+$$
+F_X: x \in \mathbb{R} \mapsto \mathbb{P}(X \leq x)
+$$
+Or in plain English, _$\text{cdf}(x)$ is the probability that $X$ is lower than or equal to $x$_. 
+
+This function makes a lot more sense for continuous variables but is still defined for discrete variables on finite populations. Indeed, we can rewrite $\mathbb{P}(X \leq x)$ as 
+$$
+F_X(x) = \mathbb{P}(X \leq x) = \frac{1}{N} \sum_{i=1}^N 1_{x_i \leq x}
+$$
+where $1_{x_i \leq x}$ equals $1$ if $x_i \leq x$ and $0$ otherwise. 
+
+```{r cdf_jar_question}
+quiz(caption = "Cumulative distribution function", 
+     question("How much is $F_X(4)$?", 
+              answer("0"), 
+              answer("5/16"),
+              answer("5/8"),
+              answer("15/16", TRUE),
+              answer("1"), 
+              allow_retry = TRUE
+         ), 
+          question("How much is $F_X(0.99)$?", 
+              answer("0", TRUE), 
+              answer("5/16"),
+              answer("5/8"),
+              answer("15/16"),
+              answer("1"), 
+              allow_retry = TRUE
+         )
+)
+```
+
+Using the tools you learned last lesson, compute $F_Y(3)$. 
+
+```{r cdf_large_jar, exercise = TRUE}
+
+```
+
+```{r cdf_large_jar-hint-1}
+"Select only values from large_jar that are smaller 3 and count how many there are."
+```
+
+```{r cdf_large_jar-hint-2}
+## Maybe start with 
+large_jar[large_jar <= 3]
+```
+
+```{r cdf_large_jar-hint-3}
+## Maybe start with 
+length(large_jar[large_jar <= 3])
+```
+
+```{r cdf_large_jar-hint-4}
+"You just need to divide the number of values smaller than 3 by the total number of values"
+```
+
+```{r cdf_large_jar-hint-solution}
+length(large_jar[large_jar <= 3]) / length(large_jar)
+```
+
+The cumulative distribution of $X$ is a bit weird:
+```{r ecdf_large_jar, echo = FALSE}
+FX <- ecdf(jar)
+curve(FX, from = -1, to = 10, n = 10000, xlab = "Size", ylab = expression(F[X]))
+```
+
+It is flat almost everywhere, starts at $0$, jumps from $0$ to $5/8$ at $1$, then again from $5/8$ to $15/16$ at $4$ and finally to $1$ at $x = 8$. 
+
+That's essentially because 
+
+- $\mathbb{P}(X < x) = 0$ for all $x < 1$ as there are no diamonds of size smaller than $1$;
+- $\mathbb{P}(X \leq x) = \mathbb{P}(X = 1) = \frac{5}{8}$ for all $x \in [1, 4)$ as all diamonds of size smaller than $4$ are in fact of size $1$;
+- $\mathbb{P}(X \leq x) = \mathbb{P}(X = 1) + \mathbb{P}(X = 4) = \frac{15}{16}$ for all $x \in [4, 8)$ as all diamonds of size smaller than $8$ are in fact of size $1$ or $4$;
+- etc
+
+### Quantiles
+
+The **quantiles** of a random variable $X$ are computed by _inverting_ the cumulative distribution function $F_X$. The quantile $q_\alpha$ of order $\alpha$ satisfies:
+$$
+F_X(q_\alpha^-) \leq \alpha \text{ and } F_X(q_\alpha) \geq \alpha
+$$
+or in terms of probabilities
+$$
+\mathbb{P}(X < q_\alpha) \leq \alpha \text{ and } \mathbb{P}(X \leq q_\alpha) \geq \alpha
+$$
+That definition can unfortunately not be simplified in general. However, for the very important special case of continuous random variables $X$, the quantile $q_\alpha$ of order $\alpha$ (with $\alpha \in [0, 1]$) is defined by the much simpler condition 
+$$
+F_X(q_\alpha) = \alpha
+$$
+and quantiles are really found by _inverting_ the cdf. For continuous random variables, $q_\alpha$ has the following simple interpretation: **a fraction $\alpha$ of the values of $X$ are lower than or equal to $q_\alpha$**. 
+
+Let's have a look at the graphical definition of the quantile $q_0.7$ of $X$:
+```{r quantile_jar, echo = FALSE}
+FX <- ecdf(jar)
+curve(FX, from = -1, to = 10, n = 10000, xlab = "Size", ylab = expression(F[X]))
+alpha <- 0.7
+qal <- quantile(jar, alpha)
+segments(-1, alpha, qal, alpha, col = "red", lty = 2)
+segments(qal, alpha, qal, 0, col = "red", lty = 2)
+points(qal, 0, pch = 19, col = "red")
+```
+
+The graph suggests that $4$ is a quantile or order 70\% (or 0.7) of $X$. We can check indeed that:
+$$
+\begin{align}
+F_X(4^-) & = \frac{5}{8} \leq 0.7 \\
+F_X(4) & = \frac{15}{16} \geq 0.7
+\end{align}
+$$
+And therefore that $4$ is the quantile or order 70\%. However, because $X$ is discrete we **can't** say 70% of the diamond sizes are smaller than 4. In fact, if you look carefully at the graph (and the definition), you can see that $4$ is the quantile of order 70\% but also of order 90\% and in fact or any order between $\frac{5}{8}$ (= 62.5\%) and $\frac{15}{16}$ (= 93.75\%)
+
+```{r quantile_question}
+question("What is the quantile of order 50% of the sequence $\\{1, \\dots, 100, \\}?", 
+         answer("1"),
+         answer("50", correct = TRUE), 
+         answer("51"), 
+         answer("100"), 
+         allow_retry = TRUE)
+```
+
+You can compute several quantiles of a random variable using the `quantile()` function. 
+
+```{r quantile_jar_example}
+quantile(x = jar, probs = c(0.7, 0.9))
+```
+
+Compute the quantile of order 50\% (also called the **median**) of $Y$:
+```{r quantile_large_jar, exercise = TRUE}
+
+```
+
+```{r quantile_large_jar-hint-1}
+"You should use the quantile function"
+```
+
+```{r quantile_large_jar-hint-2}
+quantile(x = , probs = )
+```
+
+```{r quantile_large_jar-solution}
+quantile(x = large_jar, probs = 0.5)
+```
+
+<!-- ## Classic probability distributions -->
+
+<!-- ### Normal distribution (also called standard distribution) -->
+
+<!-- ### Chi-square ($\chi^2$) distribution -->
