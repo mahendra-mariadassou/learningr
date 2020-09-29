@@ -11,7 +11,7 @@ runtime: shiny_prerendered
 library(learnr)
 library(dplyr)
 library(ggplot2)
-data(pres2017)
+data(pres2017, package = "learningr")
 knitr::opts_chunk$set(echo = FALSE)
 ## Variables shared by all exercices
 set.seed(1)
@@ -21,6 +21,13 @@ plot_normal_density <- function(mu, sigma) {
          y = dnorm(x, mean = mu, sd = sigma)) %>% 
     ggplot(aes(x = x, y = y)) + geom_line() + 
     ggtitle(paste0("Density of N(", mu, ",", sigma, ")"))
+}
+plot_chisq_density <- function(df) {
+  tibble(x = seq(0, 10, by = 0.1), 
+         y = dchisq(x, df = df)) %>% 
+    ggplot(aes(x = x, y = y)) + geom_line() + 
+    scale_x_continuous(breaks = 0:10) + 
+    ggtitle(paste0("Density of chi^2(", df, ")"))
 }
 ```
 
@@ -44,7 +51,6 @@ Normal (or Gaussian) distributions are very important in statistics as they are 
 It can also serve as a reasonable approximation for the distribution of many real-life quantities. Consider the following histogram, representing the number of registered voters in each of the 896 voting booth (also known as booth size) of Paris (stored in the data set `pres2017`). The distribution of booth sizes has a mode around 1450 most booth are not too far away from this value. This distribution is reasonably approximated by a Gaussian distribution $\mathcal{N}(\mu, \sigma)$ with parameters $\mu = 1452$ and $\sigma = 169$ (in red in the graph). Intuitively, $\mu$ is the typical voting booth size whereas $\sigma$ is the typical spread of booth sizes around that size. 
 
 ```{r echo = FALSE}
-data(pres2017)
 ggplot(pres2017, aes(x = Inscrits)) + 
   geom_histogram(aes(y = ..density..), binwidth = 20) + 
   stat_function(fun = dnorm, 
@@ -72,6 +78,10 @@ $$
 $$
 The _density function_ $f_{\mu, \sigma}$ of $\mathcal{N}(\mu, \sigma)$ can be computed with the function `dnorm()` (`d` stands for density and `norm` for normal distribution). The special case $\mu = 0$ and $\sigma = 1$ is very important and corresponds to the so called _standard normal distribution_. 
 
+In particular, since $f_{0, 1}$ is a density function, it must sum up to $1$ (as $\mathbb{P}(X \in \mathbb{R}) = 1$). We thus have 
+$$
+\int_{-\infty}^{+\infty} \frac{1}{\sqrt{2\pi}}e^{-x^2/2}dx = 1
+$$
 Use `dnorm()` to compute $f_{\mu, \sigma}(x)$ for various values of $\mu$ (argument `mean`), $\sigma$ (argument `sd`) and $x$. 
 
 ```{r dnorm, exercise = TRUE}
@@ -85,12 +95,12 @@ quiz(
            answer("$x = 1$"), 
            answer("None of the above"), 
            allow_retry = TRUE), 
-  question("For fixed $\\mu$$ and fixed $x$, when $\\sigma$$ increases, $f_{\\mu, \\sigma}(x)$", 
+  question("For fixed $\\mu$ and fixed $x$, when $\\sigma$ increases, $f_{\\mu, \\sigma}(x)$", 
            answer("increases"), 
            answer("decreases"), 
            answer("It depends", TRUE), 
            allow_retry = TRUE), 
-  question("For fixed $\\mu$$ and fixed $x$, when $\\sigma$$ increases, $f_{\\mu, \\sigma}(x)$", 
+  question("For fixed $\\mu$ and fixed $x$, when $\\sigma$ increases, $f_{\\mu, \\sigma}(x)$", 
            answer("increases"), 
            answer("decreases"), 
            answer("It depends", TRUE), 
@@ -108,19 +118,23 @@ plot_normal_density(mu = 0, sigma = 1)
 
 ### Algebraic properties 
 
-The previous exercice suggested that when changing $\mu$ and keeping $\sigma$ unmodified, we simply translate the curves:
+Let's explore the relationships between the different density curves. 
+
+#### Changing $\mu$
+
+Regarding $\mu$, the previous exercice suggests that when changing $\mu$ and keeping $\sigma$ unmodified, we simply translate the curves:
 
 ```{r density_curves, echo = FALSE}
 purrr::map(-4:4, ~ tibble(x = seq(-10, 10, by = 0.1), 
                           y = dnorm(x, mean = .x, sd = 1))) %>% 
   bind_rows(.id = 'mu') %>% 
   mutate(mu = (-4:4)[as.integer(mu)]) %>% 
-  ggplot(aes(x = x, y = y, group = mu, color = mu)) + geom_line() + 
+  ggplot(aes(x = x, y = y, group = mu, color = factor(mu))) + geom_line() + 
   labs(y = expression(f[list(mu,sigma)])) + 
-  scale_color_distiller(name = expression(mu))
+  scale_color_discrete(name = expression(mu))
 ```
 
-And you can check numerically that $f_{\mu, \sigma}(x) = f_{\mu + h, \sigma}(x + h)$ for all $x$, $h$, $\mu$ and $\sigma$
+You can check numerically that $f_{\mu, \sigma}(x) = f_{\mu + h, \sigma}(x + h)$ for all $x$, $h$, $\mu$ and $\sigma$
 ```{r translation, exercise = TRUE}
 x <- 1
 h <- 1
@@ -129,564 +143,487 @@ sigma <- 1
 dnorm(x = x+h, mean = mu + h, sd = sigma) - dnorm(x = x, mean = mu, sd = sigma)
 ```
 
+We can also check it formally. Note $y = x+h$
+$$
+\begin{multline*}
+f_{\mu+h, \sigma}(y) dy = f_{\mu+h, \sigma}(x+h) d(x+h) \\ = \frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{(x+h - (\mu+h))^2}{2\sigma^2}} dx 
+= \frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{(x - \mu)^2}{2\sigma^2}} dx = f_{\mu, \sigma}(x)dx
+\end{multline*}
+$$
 
-And we can check it formally:
+To make the connection explcit in terms of random variables, 
 $$
-f_{\mu+h, \sigma}(x+h) d(x+h) = \frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{(x+h - (\mu+h))^2}{2\sigma^2}} dx= \frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{(x - \mu)^2}{2\sigma^2}} dx = f_{\mu, \sigma}(x)dx
+X \sim \mathcal{N}(\mu, \sigma^2)  \Rightarrow Y = X + h \sim \mathcal{N}(\mu + h, \sigma^2)
+$$ 
+In particular, 
 $$
-In other words, if $X \sim \mathcal{N}(\mu, \sigma^2)$, then $X \sim \mathcal{N}(\mu + h, \sigma^2)$
+\forall a \leq b \in \mathbb{R}, \quad \mathbb{P}(Y \in [a+h, b+h]) = \mathbb{P}(X \in [a, b])
+$$
 
-We can even go further and show that 
-$$
-f_{a\mu+h, a\sigma}(ax+h) d(ax+h)= \frac{1}{a\sigma\sqrt{2\pi}}e^{-\frac{(ax+h - (a\mu+h))^2}{2\sigma^2}} adx= \frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{(x - \mu)^2}{2\sigma^2}} dx = f_{\mu, \sigma}(x)dx
-$$
-In other words, if $X \sim \mathcal{N}(\mu, \sigma)$, then $aX + h \sim \mathcal{N}(a\mu + h, a^2\sigma^2)$
+#### Changing $\sigma$
 
+Regarding $\sigma$, the relation between curves is slightly more complex: the curves become increasingly flat and _stretched out_ when the standard deviation $\sigma$ increases. 
+
+```{r density_curves_2, echo = FALSE}
+purrr::map(c(1, 2, 4, 8), ~ tibble(x = seq(-10, 10, by = 0.1), 
+                          y = dnorm(x, mean = 0, sd = .x))) %>% 
+  bind_rows(.id = 'sigma') %>% 
+  mutate(sigma = c(1L, 2L, 4L, 8L)[as.integer(sigma)]) %>% 
+  ggplot(aes(x = x, y = y, group = sigma, color = factor(sigma))) + geom_line() + 
+  labs(y = expression(f[list(mu,sigma)])) + 
+  scale_color_brewer(name = expression(sigma))
+```
+
+You can check numerically that $f_{\mu, \sigma}(x) = a f_{a\mu, a\sigma}(ax)$ for all $x$, $a$ and $\sigma$
+```{r flattening, exercise = TRUE}
+x <- 1
+a <- 2
+mu <- 0
+sigma <- 1
+dnorm(x = x, mean = mu, sd = sigma) - a*dnorm(x = a*x, mean = a * mu, sd = a*sigma)
+```
+
+In terms of density, noting $y = ax$, this means that $f_{\mu, a\sigma}(y)dy = f_{\mu, \sigma}(x)dx$
+$$
+f_{\mu, a\sigma}(y)dy = f_{\mu, a\sigma}(ax)d(ax) = \frac{1}{a\sigma\sqrt{2\pi}}e^{-\frac{(ax - a \mu)^2}{2\sigma^2}} adx= \frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{(x - \mu)^2}{2\sigma^2}} dx = f_{\mu, \sigma}(x)dx
+$$
+To make the connection explcit in terms of random variables, 
+$$
+X \sim \mathcal{N}(\mu, \sigma^2) \Rightarrow Y = aX \sim \mathcal{N}(a\mu, a^2\sigma^2)
+$$ 
+In particular, 
+$$
+\forall x_1 \leq x_2 \in \mathbb{R}, \quad \mathbb{P}(Y \in [x_1, x_2]) = \mathbb{P}\left(X \in \left[\frac{x_1}{a}, \frac{x_2}{a}\right]\right)
+$$
+
+#### Link with the standard normal distribution
+
+Combining the two previous observations:
+$$
+X \sim \mathcal{N}(\mu, \sigma^2) \Rightarrow Y = aX + h \sim \mathcal{N}(a\mu + h, a^2\sigma^2)
+$$
+
+In particular, for all parameters $\mu$ and $\sigma^2$, we can decompose any gaussian variable $X \sim \mathcal{N}(\mu, \sigma^2)$ as $X = \mu + \sigma Z$ where $Z \sim \mathcal{N}(0, 1)$ is a standard gaussian variable.
+
+In practice, it means that we can compute all the quantities we need on a standard gaussian and then use simple transforms to transfer them to any gaussian distribution. For example, if $X \sim \mathcal{N}(\mu, \sigma^2)$, then
+
+$$
+\begin{align*}
+\mathbb{P}(X \in [a, b]) & = \mathbb{P}(\mu + \sigma Z \in [a, b]) \\
+& = \mathbb{P}\left(\sigma Z \in \left[a-\mu, b - \mu \right]\right) \\
+& = \mathbb{P}\left(Z \in \left[\frac{a-\mu}{\sigma}, \frac{b - \mu}{\sigma} \right]\right)
+\end{align*}
+$$
 
 ### Mean and variance
 
-### Quantiles and distribution function
+Let's now compute the expectation and standard devation of a gaussian random variable. With the previous remark, we first compute them for $X \sim \mathcal{N}(0, 1)$ and will then extend it to more general variables $X \sim \mathcal{N}(\mu, \sigma)$. 
 
+#### Expectation
 
-### Diamonds in a jar 
+Remember that the formula for discrete distribution is 
 
-Let's consider a different example. Imagine a jar filled with diamonds of different sizes. The jar contains: 
-
-- 10 diamonds of size 1
-- 5  diamonds of size 4
-- 1  diamond  of size 8
-
-Using the function `rep()` (look at the help to see how it works), create a vector `jar` that encodes the content of the jar. Each element of `jar` should be a diamond and `jar[i]` should be the size of the $i$-th diamond. 
-
-One solution would be `jar <- c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 4, 4, 4, 4, 8)` but we want to do less typing. 
-
-```{r rep, exercise = TRUE}
-jar <- rep()
-```
-
-```{r rep-hint-1}
-"Look at the examples and the \"times\" arguments"
-```
-
-```{r rep-hint-2}
-jar <- rep(c(1, 4, 8), times = )
-```
-
-```{r rep-hint-solution}
-jar <- rep(c(1, 4, 8), times = c(10, 5, 1))
-```
-
-Complete the code to draw one diamond from the jar. 
-
-```{r draw, exercise = TRUE}
-jar <- rep()
-first_diamond <- sample(x = , size = )
-```
-
-```{r draw-solution}
-jar <- rep(c(1, 4, 8), times = c(10, 5, 1))
-first_diamond <- sample(x = jar, size = 1)
-```
-
-Imagine that you were lucky and picked the big diamond (the one of size 8) during your first draw. 
-
-Write the code to draw a second diamond from the jar. 
-
-```{r draw_sec_diamond, exercise = TRUE}
-jar <- rep()
-second_diamond <- sample(x = , size = )
-```
-
-```{r draw_sec_diamond-hint-1}
-"Think carefully about the current content of the jar"
-```
-
-```{r draw_sec_diamond-hint-2}
-jar <- rep(c(1, 4), times = c(10, 5))
-second_diamond <- sample(x = , size = )
-```
-
-```{r draw_sec_diamond-solution}
-jar <- rep(c(1, 4), times = c(10, 5))
-second_diamond <- sample(x = jar, size = 1)
-```
-
-### Diamonds in a jar (II)
-
-The previous example illsutrated **sampling without replacement**: the first draw modifies the content of the jar and hence, the second draw. 
-
-We drew two diamonds (`first_diamond` and `second_diamond`) sequentially but you can do it all at once using `sample()`. Try to do it by completing the following code:
-
-```{r sampling_wo_replacement, exercise = TRUE}
-jar <- rep(c(1, 4, 8), times = c(10, 5, 1))
-first_and_second_diamonds <- sample(x = jar, )
-```
-
-```{r sampling_wo_replacement-hint-1}
-"Look at the `size` and the `replace` arguments"
-```
-
-```{r sampling_wo_replacement-hint-2}
-jar <- rep(c(1, 4, 8), times = c(10, 5, 1))
-first_and_second_diamonds <- sample(x = jar, size = )
-```
-
-```{r sampling_wo_replacement-solution}
-jar <- rep(c(1, 4, 8), times = c(10, 5, 1))
-first_and_second_diamonds <- sample(x = jar, size = 2, replace = FALSE)
-```
-
-### Finite versus infinite populations
-
-The biggest difference between finite populations (diamonds) and infinite populations (dice throws) is that you can throw a dice infinitely many times but you run out of diamonds at some point. 
-
-In particular:
-
-- the results of 10 dice throws are likely to differ whereas
-- you end up with the **exact same** diamonds if you pick 16 diamonds from the previous jar (although you may pick them in differnt orders). 
-
-Futhermore, whenever the random variable is associated to a **finite population**, it is **discrete**. Indeed if the population has size $N$, the random variables takes at most $N$ different values (and often less than that, as in our diamond example). 
-
-```{r diamond_rv}
-question("Note X the size of a diamond picked at random from the previous jar. How many different values can X take?", 
-         answer("16", message = "There are indeed 16 diamonds but are there 16 different sizes?"), 
-         answer("1"), 
-         answer("3", TRUE), 
-         answer("8"), 
-         allow_retry = TRUE)
-```
-
-## Descriptors of random variables
-
-### Overview
-
-We're going to illustrate the notions of
-
-- Probability distribution
-- Expectation
-- Standard deviation
-- Cumulative distribution function
-
-on finite populations using our diamonds in a jar example. Those concepts can be extended to infinite populations (or equivalently random variables that can take infinitely many values) but we'll leave that for later. 
-
-Hereafter, we note $X$ (the random variable corresponding to) the size of a diamond picked at random from the jar. 
-
-## Probability distribution
-
-### Theory
-
-```{r omega}
-question("Select all possible values for X:", 
-         answer("1", TRUE), 
-         answer("4", TRUE), 
-         answer("5", FALSE, message = "No diamond has size 5."), 
-         answer("8", TRUE), 
-         answer("10", FALSE, message = "No diamond has size 10."), 
-         allow_retry = TRUE)
-```
-
-The set of all possible values for $X$ (i.e. diamond sizes) is noted $\Omega = \{x_1, x_2, x_3\}$. 
-
-The probability distribution function (or pdf) of $X$ if the function:
-$$
-x \in \Omega \mapsto \mathbb{P}(X = x)
-$$
-which associates to each diamond size the probability of picking a diamond of that size. 
-
-```{r pdf_quizz}
-quiz(
-  question("How much is $\\mathbb{P}(X = 0)$", 
-           answer("0", TRUE), 
-           answer("5/8"), 
-           answer("5/16"), 
-           answer("1/16"), 
-           answer("1")), 
-  question("How much is $\\mathbb{P}(X = 8)$", 
-           answer("0"), 
-           answer("1/8"), 
-           answer("1/16", TRUE), 
-           answer("1"))
-)
-```
-
-```{r pdf_quizz_2}
-question("Select all possible values for $\\mathbb{P}(X = x)$:", 
-         answer("0", TRUE),
-         answer("1/16", TRUE),
-         answer("1/8"),
-         answer("1/4"),
-         answer("5/16", TRUE),
-         answer("5/8", TRUE),
-         answer("1"), 
-         allow_retry = TRUE)
-```
-
-There is no straighforward way to build the pdf of $X$ (there is for standard random variables). You can however build a related quantity: the frequency of different diamond sizes in the full populations using `table()` 
-
-```{r table-example}
-jar <- rep(c(1, 4, 8), times = c(10, 5, 1))
-table(jar)
-```
-
-We consider a larger jar, whose content is stored in `large_jar` and note $Y$ the size of a diamond picked at random from the large jar. 
-
-```{r large_jar, exercise = TRUE, exercise.eval = TRUE}
-large_jar
-```
-
-```{r large_jar-solution}
-table(large_jar)
-```
-
-Use `table()` in the previous chunck to answer the following questions:
-
-```{r large_jar_question}
-quiz(caption = "Large diamond jar", 
-  question("How many diamonds are stored in the large jar?", 
-           answer("16"), 
-           answer("66"),
-           answer("200", TRUE)),
-  question("Select all diamond sizes in the large jar", 
-           answer("1", TRUE), 
-           answer("3", TRUE), 
-           answer("4"), 
-           answer("8"), 
-           answer("9", TRUE), 
-           allow_retry = TRUE),
-  question("How much is $\\mathbb{P}(Y = 1)$ ?", 
-           answer("5/8"), 
-           answer("1/66"),
-           answer("33/100", TRUE)) 
-)
-```
-
-### Expectation
-
-
-The **expectation** of a random variable $X$, noted $\mathbb{E}(X)$, is its average value. Assume that $X$ is associated to a population of size $N$ and that individual $i$ has value $x_i$, so that 
-
-- $X = x_i$ whenever you pick individual $i$. 
-- $\mathbb{P}(X = x)$ is the fraction of individuals with value $x$, i.e. $\frac{\#\{i \text{ such that } x_i = x\}}{N}$
-
-You can compute it using a formula based either on the full set of values $(x_i)_{i = 1\dots N}$ :
-$$
-\mathbb{E}(X) = \frac{1}{N}\sum_{i = 1}^N x_i
-$$
-or the probability distribution:
 $$
 \mathbb{E}(X) = \sum_{x \in \Omega} x \mathbb{P}(X = x)
 $$
+Here, $X$ is real-valued and continuous. We thus need to change the sum to an integral to obtain the formula:
 
-In our (small) jar example, the first formula gives:
 $$
-\mathbb{E}(X) = \frac{1}{16} \left( \underbrace{1 + \dots + 1}_{\times 10} + \underbrace{4 + \dots + 4}_{\times 5} + \underbrace{8}_{\times 1} \right) = 2.375
+\mathbb{E}(X) = \int_{\mathbb{R}} x \underbrace{f_{0, 1}(x)dx}_{\simeq \mathbb{P}(X \in [x, x + dx])}
 $$
 
-You can of course simplify it to the second formula 
-$$
-\mathbb{E}(X) = 1 \times \underbrace{\frac{10}{16}}_{\mathbb{P}(X = 1)} + 4 \times \underbrace{\frac{5}{16}}_{\mathbb{P}(X = 4)} + 8 \times \underbrace{\frac{1}{16}}_{\mathbb{P}(X = 8)} = 2.375
-$$
-and obtain the same result. 
+Before computing this quantity exactly, let's try to guess its values by simulation. The function `rnorm()` (`r` stands for random draw and `norm` for normal distribution) allows you to sample many values from any gaussian distribution. By default, it draws values from a standard gaussian. 
 
-Graphically we have:
-```{r jar_barplot}
-ggplot(data.frame(id = 1:length(jar), size = jar), 
-       aes(x = size)) + 
-  geom_bar() + 
-  scale_y_continuous(breaks = seq(0, 10, 2)) + 
-  geom_vline(xintercept = mean(jar), color = "red") +
-  annotate("text", x = mean(jar), y = 9, color = "red", 
-           hjust = -0.1, vjust = 1, label = "E(X): Average\ndiamond size ") + 
-  theme_bw() + 
-  labs(x = "Size", y = "Number of diamonds")
+Fill in the dots to compute the average value of 100, 1000 and 10000 values sampled from $\mathcal{N}(0, 1)$
+
+```{r mean_value, exercise = TRUE}
+mean(rnorm(...))
 ```
 
-Look at the functions `sum()` and `length()` and compute $\mathbb{E}(Y)$ using the first formula
-
-```{r mean_exercice, exercise = TRUE}
-sum_of_y <- 
-length_of_y <- 
-expectation_of_y <- 
-expectation_of_y  
+```{r mean_value-hint}
+"Look at the help of the function, understand what each parameter stands for."
 ```
 
-```{r mean_exercice-hint-1}
-sum_of_y <- sum(y)
-length_of_y <- 
-expectation_of_y <- 
-expectation_of_y  
+```{r mean_value-solution}
+mean(rnorm(n = 100))   ## Mean of 100 values
+mean(rnorm(n = 1000))  ## Mean of 1000 values
+mean(rnorm(n = 10000)) ## Mean of 10000 values
 ```
 
-```{r mean_exercice-hint-2}
-sum_of_y <- sum(y)
-length_of_y <- length(y)
-expectation_of_y <- 
-expectation_of_y  
-```
+Repeat the exercise for different values of $\mu$ and $\sigma$ before answering the following questions:
 
-```{r mean_exercice-solution}
-sum_of_y <- sum(y)
-length_of_y <- length(y)
-expectation_of_y <- sum_of_y / length_of_y
-expectation_of_y  
-```
-
-Now look at `mean()` and suggest an alternative way of computing $\mathbb{E}(Y)$. 
-
-```{r mean_final_formula, exercise = TRUE}
-expectation_of_y <- 
-expectation_of_y
-```
-
-```{r mean_final_formula-solution}
-expectation_of_y <- mean(large_jar)
-expectation_of_y
-```
-
-Computing $\mathbb{E}(Y)$ from the second formula is slightly more involved. The following code allows you to do it but is rarely used in practice. 
-
-```{r mean_second_formula}
-## Find values of Y 
-values_of_y <- as.numeric(names(table(large_jar)))
-values_of_y
-## Compute pdf of Y
-pdf_of_y <- table(large_jar) / length(large_jar)
-pdf_of_y
-expectation_of_y <- sum(values_of_y * pdf_of_y)
-```
-
-### Variance and Standard deviation
-
-The **variance** of $X$, noted $\mathbb{V}(X)$, is a measure of **dispersion around the mean** defined as the quadratic deviation around the mean. 
-
-Formally: 
-$$
-\mathbb{V}(X) = \mathbb{E}( \left[ X - \mathbb{E}(X) \right]^2) = \frac{1}{N} \sum_{i = 1}^N (x_i - \mathbb{E}(X))^2
-$$
-A famous equality shows that the variance can be computed using the much simpler formula
-$$
-\mathbb{V}(X) = \mathbb{E}(X^2) - \mathbb{E}(X)^2 = \frac{1}{N} \sum_{i=1}^N x_i^2 - \left(\frac{1}{N} \sum_{i=1}^N x_i \right)^2
-$$
-**Caution** Be very careful with the position of the exponents $^2$ and the parenthesis. 
-
-In our example:
-```{r var_example, echo = FALSE}
-plot_data <- data.frame(size = jar) %>% count(size, name = "count") %>% 
-  mutate(prob              = count / sum(count),
-         mean              = mean(jar), 
-         deviation         = size - mean, 
-         squared_deviation = deviation^2, 
-         squared_size      = size^2)
-```
-
-And we can compute the variance easily as:
-$$
-\begin{align}
-\mathbb{E}(X^2) & = 1^2 \times \frac{1}{16} + 4^2 \times \frac{5}{16} + 8^2 \times \frac{10}{16} = 9.625 \\
-\mathbb{E}(X)^2 & = \left( 1 \times \frac{1}{16} + 4 \times \frac{5}{16} + 8 \times \frac{10}{16} \right)^2 = 5.640625 \\
-\mathbb{V}(X) & = \mathbb{E}(X^2) - \mathbb{E}(X)^2 = 3.984375
-\end{align}
-$$
-
-```{r jar_variance, eval = FALSE, echo = FALSE}
-ggplot(plot_data, aes(x = squared_deviation, y = count)) + 
-  geom_bar(stat = "identity") + 
-  scale_y_continuous(breaks = seq(0, 10, 2)) + 
-  geom_vline(xintercept = var(jar), color = "red") +
-  annotate("text", x = var(jar), y = 9, color = "red", 
-           hjust = -0.1, vjust = 1, label = "V(X): Average\nquadratic deviation ") + 
-  theme_bw() + 
-  labs(x = "Quadratic deviation to the mean", y = "Number of diamonds")
-```
-
-Using `mean()` and the power function `^`, compute the variance of $Y$. 
-
-```{r variance_y, exercise = TRUE}
-var_of_y <- 
-var_of_y
-```
-
-```{r variance_y-solution}
-var_of_y <- mean(large_jar^2) - mean(large_jar)^2
-var_of_y
-```
-
-R provides the built-in function `var()` to compute the variance. Compare your result with one provided by `var()`
-
-```{r variance_y_with_var, exercise = TRUE}
-manu_var <- ## using the manual computation
-auto_var <- ## using var
-auto_var - manu_var
-```
-
-```{r variance_y_with_var-solution}
-manu_var <- mean(large_jar^2) - mean(large_jar)^2
-auto_var <- var(large_jar)
-auto_var - manu_var
-```
-
-It seems that there is a small but no null difference between the two quantities. That's normal. For reasons you'll understand later, the variance $\mathbb{V}_R(X)$ computed by `var()` (and by the same function in most computer languages) is slightly different from the one defined above. The two are related by the relation  
-
-$$
-\mathbb{V}_R(X) = \frac{N}{N-1} \mathbb{V}(X) = \frac{1}{N-1} \sum_{i=1}^N \left( x_i - \mathbb{E}(X) \right)^2
-$$
-
-As you can verify here
-```{r difference_var_variance, exercise = TRUE}
-N <- length(large_jar)
-manu_var <- 
-auto_var <- 
-auto_var - N * manu_var / (N - 1)
-```
-
-### Cumulative distribution function
-
-The cumulative distribution function (or cdf) of a numeric random variable $X$ is defined by:
-$$
-F_X: x \in \mathbb{R} \mapsto \mathbb{P}(X \leq x)
-$$
-Or in plain English, _$\text{cdf}(x)$ is the probability that $X$ is lower than or equal to $x$_. 
-
-This function makes a lot more sense for continuous variables but is still defined for discrete variables on finite populations. Indeed, we can rewrite $\mathbb{P}(X \leq x)$ as 
-$$
-F_X(x) = \mathbb{P}(X \leq x) = \frac{1}{N} \sum_{i=1}^N 1_{x_i \leq x}
-$$
-where $1_{x_i \leq x}$ equals $1$ if $x_i \leq x$ and $0$ otherwise. 
-
-```{r cdf_jar_question}
-quiz(caption = "Cumulative distribution function", 
-     question("How much is $F_X(4)$?", 
-              answer("0"), 
-              answer("5/16"),
-              answer("5/8"),
-              answer("15/16", TRUE),
-              answer("1"), 
-              allow_retry = TRUE
-         ), 
-          question("How much is $F_X(0.99)$?", 
-              answer("0", TRUE), 
-              answer("5/16"),
-              answer("5/8"),
-              answer("15/16"),
-              answer("1"), 
-              allow_retry = TRUE
-         )
+```{r q2}
+quiz(
+  question("The expectation of $X \\sim \\mathcal{N}(0, 1)$ is", 
+           answer("0", correct = TRUE),
+           answer("1"),
+           answer("None of the above"),
+           allow_retry = TRUE, random_answer_order = TRUE
+           ), 
+    question("The expectation of $X \\sim \\mathcal{N}(\\mu, \\sigma)$", 
+           answer("depends only on $\\mu$", correct = TRUE),
+           answer("depends only on $\\sigma$"),
+           answer("depends on both $\\sigma$ and $\\mu$"),
+           answer("depends on neither $\\sigma$ nor $\\mu$"),
+           allow_retry = TRUE, random_answer_order = TRUE
+           )
 )
 ```
 
-Using the tools you learned last lesson, compute $F_Y(3)$. 
-
-```{r cdf_large_jar, exercise = TRUE}
-
-```
-
-```{r cdf_large_jar-hint-1}
-"Select only values from large_jar that are smaller 3 and count how many there are."
-```
-
-```{r cdf_large_jar-hint-2}
-## Maybe start with 
-large_jar[large_jar <= 3]
-```
-
-```{r cdf_large_jar-hint-3}
-## Maybe start with 
-length(large_jar[large_jar <= 3])
-```
-
-```{r cdf_large_jar-hint-4}
-"You just need to divide the number of values smaller than 3 by the total number of values"
-```
-
-```{r cdf_large_jar-hint-solution}
-length(large_jar[large_jar <= 3]) / length(large_jar)
-```
-
-The cumulative distribution of $X$ is a bit weird:
-```{r ecdf_large_jar, echo = FALSE}
-FX <- ecdf(jar)
-curve(FX, from = -1, to = 10, n = 10000, xlab = "Size", ylab = expression(F[X]))
-```
-
-It is flat almost everywhere, starts at $0$, jumps from $0$ to $5/8$ at $1$, then again from $5/8$ to $15/16$ at $4$ and finally to $1$ at $x = 8$. 
-
-That's essentially because 
-
-- $\mathbb{P}(X < x) = 0$ for all $x < 1$ as there are no diamonds of size smaller than $1$;
-- $\mathbb{P}(X \leq x) = \mathbb{P}(X = 1) = \frac{5}{8}$ for all $x \in [1, 4)$ as all diamonds of size smaller than $4$ are in fact of size $1$;
-- $\mathbb{P}(X \leq x) = \mathbb{P}(X = 1) + \mathbb{P}(X = 4) = \frac{15}{16}$ for all $x \in [4, 8)$ as all diamonds of size smaller than $8$ are in fact of size $1$ or $4$;
-- etc
-
-### Quantiles
-
-The **quantiles** of a random variable $X$ are computed by _inverting_ the cumulative distribution function $F_X$. The quantile $q_\alpha$ of order $\alpha$ satisfies:
+We'll compute the expectation of $X \sim \mathcal{N}(0, 1)$ exactly:
 $$
-F_X(q_\alpha^-) \leq \alpha \text{ and } F_X(q_\alpha) \geq \alpha
+\begin{align*}
+\mathbb{E}[X] & = \int_{\mathbb{R}} x f_{0, 1}(x)dx = \int_{\mathbb{R}} \frac{x}{\sqrt{2\pi}} e^{-x^2/2} dx \\
+& = \frac{1}{\sqrt{2\pi}} \lim_{A \to +\infty} \int_{-A}^A \underbrace{xe^{-x^2/2}dx}_{= d(-e^{-x^2/2})} \\ 
+& = \frac{1}{\sqrt{2\pi}} \lim_{A \to +\infty} \underbrace{\left[ -e^{-x^2/2} \right]_{-A}^A}_{= 0} = 0
+\end{align*}
 $$
-or in terms of probabilities
+For a non standard gaussian variable $Z \sim \mathcal{N}(\mu, \sigma^2)$, we use the relation $Z = \mu + \sigma X$ with $X \sim \mathcal{N}(0, 1)$ to write:
 $$
-\mathbb{P}(X < q_\alpha) \leq \alpha \text{ and } \mathbb{P}(X \leq q_\alpha) \geq \alpha
+\begin{align*}
+\mathbb{E}[Z] & = \mathbb{E}[\mu + \sigma X] = \mu + \sigma \mathbb{E}[X] = \mu
+\end{align*}
 $$
-That definition can unfortunately not be simplified in general. However, for the very important special case of continuous random variables $X$, the quantile $q_\alpha$ of order $\alpha$ (with $\alpha \in [0, 1]$) is defined by the much simpler condition 
-$$
-F_X(q_\alpha) = \alpha
-$$
-and quantiles are really found by _inverting_ the cdf. For continuous random variables, $q_\alpha$ has the following simple interpretation: **a fraction $\alpha$ of the values of $X$ are lower than or equal to $q_\alpha$**. 
+The second equality stems from the linearity of the expectation, which is itself a byproduct of the linearity of the sum and the integral. 
 
-Let's have a look at the graphical definition of the quantile $q_0.7$ of $X$:
-```{r quantile_jar, echo = FALSE}
-FX <- ecdf(jar)
-curve(FX, from = -1, to = 10, n = 10000, xlab = "Size", ylab = expression(F[X]))
-alpha <- 0.7
-qal <- quantile(jar, alpha)
-segments(-1, alpha, qal, alpha, col = "red", lty = 2)
-segments(qal, alpha, qal, 0, col = "red", lty = 2)
-points(qal, 0, pch = 19, col = "red")
-```
+#### Variance and Standard Deviation
 
-The graph suggests that $4$ is a quantile or order 70\% (or 0.7) of $X$. We can check indeed that:
-$$
-\begin{align}
-F_X(4^-) & = \frac{5}{8} \leq 0.7 \\
-F_X(4) & = \frac{15}{16} \geq 0.7
-\end{align}
-$$
-And therefore that $4$ is the quantile or order 70\%. However, because $X$ is discrete we **can't** say 70% of the diamond sizes are smaller than 4. In fact, if you look carefully at the graph (and the definition), you can see that $4$ is the quantile of order 70\% but also of order 90\% and in fact or any order between $\frac{5}{8}$ (= 62.5\%) and $\frac{15}{16}$ (= 93.75\%)
+We can once again use simulations to guess the variance of $X \sim \mathcal{N}(0, 1)$. Adapt the previous code chunck to guess the variance of $X$ using 100, 1000 and 10000 values sampled from $\mathcal{N}(0, 1)$. 
 
-```{r quantile_question}
-question("What is the quantile of order 50% of the sequence $\\{1, \\dots, 100, \\}?", 
-         answer("1"),
-         answer("50", correct = TRUE), 
-         answer("51"), 
-         answer("100"), 
-         allow_retry = TRUE)
-```
-
-You can compute several quantiles of a random variable using the `quantile()` function. 
-
-```{r quantile_jar_example}
-quantile(x = jar, probs = c(0.7, 0.9))
-```
-
-Compute the quantile of order 50\% (also called the **median**) of $Y$:
-```{r quantile_large_jar, exercise = TRUE}
+```{r variance, exercise = TRUE}
 
 ```
 
-```{r quantile_large_jar-hint-1}
-"You should use the quantile function"
+```{r variance-hint-1}
+"What function should you use to compute the variance?"
 ```
 
-```{r quantile_large_jar-hint-2}
-quantile(x = , probs = )
+```{r variance-hint-2}
+"Remember `var()` from lesson 2.1?"
 ```
 
-```{r quantile_large_jar-solution}
-quantile(x = large_jar, probs = 0.5)
+```{r variance-solution}
+var(rnorm(n = 100))   ## Variance of 100 values
+var(rnorm(n = 1000))  ## Variance of 1000 values
+var(rnorm(n = 10000)) ## Variance of 10000 values
 ```
 
-<!-- ## Classic probability distributions -->
+Repeat the previous exercise for different values of $\mu$ and $\sigma$ before answering the following questions:
 
-<!-- ### Normal distribution (also called standard distribution) -->
+```{r q3}
+quiz(
+  question("The variance of $X \\sim \\mathcal{N}(0, 1)$ is", 
+           answer("1", correct = TRUE),
+           answer("0"),
+           answer("None of the above"),
+           allow_retry = TRUE, random_answer_order = TRUE
+           ), 
+    question("The variance of $X \\sim \\mathcal{N}(\\mu, \\sigma)$", 
+           answer("depends only on $\\sigma$", correct = TRUE),
+           answer("depends only on $\\mu$"),
+           answer("depends on both $\\sigma$ and $\\mu$"),
+           answer("depends on neither $\\sigma$ nor $\\mu$"),
+           allow_retry = TRUE, random_answer_order = TRUE
+           )
+)
+```
 
-<!-- ### Chi-square ($\chi^2$) distribution -->
+We'll compute the variance of $X \sim \mathcal{N}(0, 1)$ exactly using integration by parts:
+$$
+\begin{align*}
+\mathbb{V}[X] & = \mathbb{E}[(X - \underbrace{\mathbb{E}[X]}_{= 0})^2] = \mathbb{E}[X^2] \\ 
+& = \int_{\mathbb{R}} x^2 f_{0, 1}(x)dx = \int_{\mathbb{R}} \frac{x^2}{\sqrt{2\pi}} e^{-x^2/2} dx \\
+& = \frac{1}{\sqrt{2\pi}} \lim_{A \to +\infty} \int_{-A}^A \underbrace{x}_{= u(x)} \times \underbrace{xe^{-x^2/2}}_{=v'(x)} dx \\
+& = \frac{1}{\sqrt{2\pi}} \lim_{A \to +\infty} \left[ u(x) v(x)\right]_{-A}^A - \int_{-A}^A u'(x)v(x)dx \\ 
+& = \frac{1}{\sqrt{2\pi}} \lim_{A \to +\infty} \underbrace{\left[ -xe^{-x^2/2} \right]_{-A}^A}_{\xrightarrow[A \to \infty]{} 0} + \int_{-A}^A e^{-x^2/2} dx \\ 
+& = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{+\infty} e^{-x^2/2} dx = 1
+\end{align*}
+$$
+For a non standard gaussian variable $Z \sim \mathcal{N}(\mu, \sigma^2)$, we use the relation $Z = \mu + \sigma X$ with $X \sim \mathcal{N}(0, 1)$ to write:
+$$
+\begin{align*}
+\mathbb{V}[Z] & = \mathbb{E}\left[\left( (\mu + \sigma X) - \underbrace{\mathbb{E}[\mu + \sigma X]}_{= \mu} \right)^2 \right] = \mathbb{E}[\sigma^2 X^2] = \sigma^2
+\end{align*}
+$$
+
+#### Recap
+
+To summarize the results, a random variable $X \sim \mathcal{N}(\mu, \sigma^2)$ has mean $\mu$ and variance $\sigma^2$ (or equivalently standard deviation $\sigma$). 
+
+### Quantiles and distribution function
+
+On top of the density function, it is useful for many applications to compute various quantiles and evaluate the cumulative distribution function (also called probability). You can do so with the functions `pnorm()` for the distribution and `qnorm()` for the quantiles. 
+
+Remember that the quantile $q_\alpha$ of order $\alpha$ (for $\alpha \in [0, 1]$) of the random variable $X \sim \mathcal{N}(\mu, \sigma^2)$ is implicitly defined by the equation
+$$
+\mathbb{P}(X \leq q_\alpha) = \alpha
+$$
+and that the distribution function $F_X = F_{\mu, \sigma}$ is defined by
+$$
+F_{\mu, \sigma}(x) = \mathbb{P}(X \leq x) = \int_{-\infty}^{x} f_{\mu, \sigma}(u)du
+$$
+
+Consider $X \sim \mathcal{N}(0, 1)$. Use `pnorm()` to compute $\mathbb{P}(X \in [-1, 1])$
+
+```{r pnorm, exercise = TRUE}
+
+```
+
+```{r pnorm-hint-1}
+"Write the target quantity as a difference"
+```
+
+```{r pnorm-hint-2}
+"Compute P(X <= 1) - P(X <= -1)
+```
+
+```{r pnorm-solution}
+pnorm(1) - pnorm(-1)
+```
+
+```{r pnorm_quiz}
+quiz(caption = "pnorm()", 
+     question("Which intervals $I$ satisfy $\\mathbb{P}(X \\in I) = 1/2$", 
+              answer("$I = [0, +\\infty]$", TRUE), 
+              answer("$I = [-\\infty, 0]$", TRUE),        
+              answer("$I = [-0.25, 0.25]$"),        
+              answer("$I = [-0.674, 0.674]$", TRUE),      
+              allow_retry = TRUE, 
+              random_answer_order = TRUE, 
+              message = "Use pnorm() to compute the probability of the various intervals if you're not sure."
+         ), 
+          question("Which intervals $I$ satisfy $\\mathbb{P}(X \\in I) = 0.95$", 
+          answer("$I = [-1.645, +\\infty]$", TRUE), 
+          answer("$I = [-\\infty, 1.645]$", TRUE),        
+          answer("$I = [-1.96, 1.96]$", TRUE),        
+          answer("$I = [-1.645, 1.645]$", TRUE),      
+          allow_retry = TRUE, 
+          random_answer_order = TRUE, 
+          message = "Use pnorm() to compute the probability of the various intervals if you're not sure."
+          )
+)
+```
+
+Now use `qnorm()` to find a relationship between $q_{\alpha}$ and $q_{1 - \alpha}$
+
+```{r qnorm, exercise = TRUE}
+
+```
+
+```{r qnorm_symmetry}
+question("The relationship between $q_{\\alpha}$ and $q_{1 - \\alpha}$ is:", 
+         answer("$q_{1 - \\alpha} = -q_{\\alpha}$", TRUE), 
+         answer("$q_{1 - \\alpha} = 1 - q_{\\alpha}$"), 
+         answer("$q_{1 - \\alpha} = 1 + q_{-\\alpha}$", message = "Think harder: $q_{-\\alpha}$ does not exist."), 
+         allow_retry = TRUE, 
+         random_answer_order = TRUE, 
+         message = "Indeed, since the density of $X$ is symmetric, $\\alpha = \\mathbb{P}(X \\leq q_{\\alpha}) = \\mathbb{P}(X \\geq -q_\\alpha}) = 1 - \\mathbb{P}(X \\leq -q_\\alpha})$ and thus $\\mathbb{P}(X \\leq -q_\\alpha}) = 1 - \\alpha$ which means $q_{1 - \\alpha} = -q_{\\alpha}$"
+         )
+```
+
+We want to find $x$ such that $\mathbb{P}(X \in [-x, x]) = 0.6$. Using the symmetry of $X$, we can write 
+$$
+\begin{align*}
+\mathbb{P}(X \in [-x, x]) & = \mathbb{P}(X \leq x) - \mathbb{P}(X \leq -x) \\
+& = (1 - \underbrace{\mathbb{P}(X \geq x)}_{\mathbb{P}(X \leq -x)}) - \mathbb{P}(X \leq -x) \\
+& = 1 - 2\mathbb{P}(X \leq -x)
+\end{align*}
+$$
+
+Use `qnorm()` to compute $x$
+```{r qnorm_2, exercise = TRUE}
+qnorm(...)
+```
+
+```{r qnorm_q2}
+question("The value of $x$ is:", 
+         answer("0.84", TRUE), 
+         answer("-0.84"),
+         answer("0.253"),
+         answer("-0.253"), 
+         allow_retry = TRUE, 
+         random_answer_order = TRUE, 
+         message = "We need to find $x$ such that $\\mathbb{P}(X \\leq -x) = 0.2$. A simple call to `qnorm(0.2)` returns $-x = -0.8416212$ from which we deduce $x = 0.8416212$"
+         )
+```
+
+### Sum of independent gaussians 
+
+The last point we'll cover concerns sums of random variables. Consider two independent random variables $X_1 \sim \mathcal{N}(0, 1)$ and $X_2 \sim \mathcal{N}(0, 1)$. What can we say about $Z = X_1 + X_2$? 
+
+We'll try to guess the answer using simulations. Generate 1 000 values for $X$, 10 000 values of $Y$ and build the density of $Z = X+Y$. 
+
+```{r histogram_z, exercise = TRUE}
+df <- tibble(
+  x1 = ..., 
+  x2 = ...,
+  z = x1 + x2)
+ggplot(df, aes(x = z, y = ..density..)) +
+  geom_histogram(binwidth = 0.05)
+```
+
+```{r histogram_z-solution}
+df <- tibble(
+  x1 = rnorm(10000), 
+  x2 = rnorm(10000),
+  z = x1 + x2)
+ggplot(df, aes(x = z, y = ..density..)) +
+  geom_histogram(binwidth = 0.05)
+```
+
+It looks a lot like the density of a gaussian random variable. It turns out that's the case: $Z$ is itself a gaussian random variable with mean $\mu$ and $\sigma^2$. 
+
+But what can we say about $\mu$ and $\sigma^2$? 
+
+```{r gaussian_sum}
+quiz(caption = "Sum of independent gaussians", 
+     question("The value of $\\mu$ is:", 
+              answer("0", correct = TRUE), 
+              answer("1", message = "Remember that the expectation is linear."), 
+              answer("2", message = "Remember that the expectation is linear."), 
+              allow_retry = TRUE, 
+              random_answer_order = TRUE,
+              message = "Indeed, the expectation is linear and thus $\\mathbb{E}[Z] = \\mathbb{E}[X_1] + \\mathbb{E}[X_2] = 0."
+              ), 
+     question("The value of $\\sigma$ is:", 
+              answer("0", message = "What does it mean for a random variable to have null variance?"), 
+              answer("1", message = "Does the previous picture look like the density of $\\mathcal{N}(0, 1)$"), 
+              answer("2", correct = TRUE), 
+              allow_retry = TRUE, 
+              random_answer_order = TRUE,
+              message = "Indeed, the variance is additive for **independent** random variables thus $\\mathbb{V}[Z] = \\mathbb{V}[X_1] + \\mathbb{V}[X_2] = 0. Intuitively, when you add two independent measurement errors, you get an even bigger measurement error."
+     ) 
+)
+```
+
+
+The previous result can be extented to an arbitrary number of independent gaussian variables: if the $X_i$ (for $i \in \{1, \dots, n\}$) are independent gaussian variables with $X_i \sim \mathcal{N}(\mu_i, \sigma_i^2)$, then:
+
+$$
+Z = X_1 + \dots + X_n \sim \mathcal{N}(\underbrace{\mu_1 + \dots + \mu_n}_{=\mathbb{E}[Z]}, \underbrace{\sigma_1^2 + \dots + \sigma_n^2}_{=\mathbb{V}[Z]})
+$$
+
+## Chi-square distribution 
+
+### Overview
+
+The chi square distribution comes up very often in statistical analysis and is very useful in hypothesis testing and in construction of confidence interval. It's derived from the standard normal variable. 
+
+### Formal definition 
+
+If $X_1, \dots, X_n$ are $n$ independent standard normal random variables, then the sum of their squares:
+
+$$
+U = \sum_{i=1}^n X_i^2
+$$
+is a positive, continuous,  random variable distributed according to the chi-square distribution with $n$ degrees of freedom, noted $\chi_n^2$
+
+### Density, quantile and distribution functions
+
+The density function of the $\chi_n^2$ distribution is quite complex:
+$$
+f_n(x) = \frac{x^{\frac{n-1}{2}}e^{-\frac{x}{2}}}{2^{\frac{n}{2}} \Gamma\left(\frac{n}{2}\right)}
+$$
+where $\Gamma\left(\frac{n}{2}\right)$ is a constant computed such that 
+$$
+\int_0^{+\infty} f_n(x)dx = 1
+$$
+to ensure that $f_n$ is a proper density function. 
+
+You can evaluate this function at any with `dchisq()`, where `df` stands for degrees of freedom. 
+
+```{r dchisq, exercise = TRUE}
+dchisq(x = 1, df = 1)
+```
+
+The function `plot_chisq_density()` allows you to plot the density of $\chi_n^2$ for various values of $n$:
+```{r dchisq-plot, exercise = TRUE}
+plot_chisq_density(df = 3)
+```
+
+Unlike the normal distribution, the $\chi^2$ density is asymmetric and depends on only one parameter. There is no simple relationship between the densities of $\chi^2_n$ and $\chi^2_p$. 
+
+Just like for the normal distribution, you can compute the quantiles and the distribution function of the $\chi^2$ with the function `qchisq()` and `pchisq()` and generate $chi^2$ distributed values with `rchisq()`. 
+
+Practice those functions and answer the set of questions
+
+```{r qchisq, exercise = TRUE}
+
+```
+
+Assume that $X \sim \chi_3^2$ and $Y \sim \chi_5^2$
+
+```{r chisquare-quiz}
+quiz(caption = "Chi-square distribution", 
+     question("Where is $f_3$ maximum?", 
+              answer("1", TRUE), 
+              answer("2"),
+              answer("3"), 
+              allow_retry = TRUE, 
+              random_answer_order = TRUE, 
+              message = "Indeed, for $n \\geq 2$, $f_n$ reaches its maximum at $x = n-2$. You can read it from the graph or differentiate $f_n$ and finds the zeroes of the derivative."), 
+     question("What's the quantile of order 0.95 of $X/3$?", 
+              answer("2.60", TRUE), 
+              answer("7.81"),
+              answer("1.65"), 
+              allow_retry = TRUE, 
+              random_answer_order = TRUE, 
+              message = "Indeed, the quantile $q_{0.95}$ of order 0.95 of $X$ is computed by `qchisq(0.95, 3)`, which gives $q_{0.95} = 7.81$. Since $0.95 = \\mathbb{P}(X \\leq q_{0.95}) = \\mathbb{P}(X/3 \\leq q_{0.95}/3), the quantile of order 0.95 of $X/3$ is $q_{0.95}/3 = 2.60$."),
+     question("What's the probability that $Y/5$ is above 1.5?", 
+              answer("0.19", TRUE),
+              answer("0.81"), 
+              answer("0.087"),
+              answer("0.93"), 
+              allow_retry = TRUE, 
+              random_answer_order = TRUE, 
+              message = "Indeed, the probability in question is given by $\\mathbb{P}(Y/5 \\geq 1.5) = \\mathbb{P}(Y \\geq 7.5)$ and can be computed by `1 - pchisq(7.5, 5)` to obtain $0.19$.")
+)
+```
+
+### Mean and variance 
+
+Before doing the exact computation, use simulations to guess the mean and variance of $U \sim \chi_n^2$
+
+```{r chisq_mean_variance, exercise = TRUE}
+u <- rchisq(..., df = 3)
+...
+...
+```
+
+```{r chisq_mean_variance-solution}
+u <- rchisq(n = 10000, df = 3) ## any large value of n will do
+mean(u)
+var(u)
+```
+
+Repeat the process for different values of `df` and take a guess. 
+
+The mean and variance of $U \sim \chi_n^2$ can be computed simply from the decomposition 
+$$
+U = \sum_{i=1}^n X_i^2
+$$
+Remember that the expectation is linear. 
+
+$$
+\mathbb{E}[U] = \mathbb{E}\left[ \sum_{i=1}^n X_i^2 \right] = \sum_{i=1}^n \mathbb{E}[X_i^2] = \sum_{i=1}^n \underbrace{\mathbb{V}[X_i]}_{=1} = n
+$$
+
+The variance is also additive for independent variables, thus 
+$$
+\mathbb{V}[U] = \mathbb{V}\left[ \sum_{i=1}^n X_i^2 \right] = \sum_{i=1}^n \mathbb{V}[X_i^2] = \sum_{i=1}^n \mathbb{E}[X_i^4] - {\underbrace{\mathbb{E}[X_i^2]}_{=1}}^2
+$$
+
+We thus need to compute $\mathbb{E}[X^4]$ when $X$ is a standard normal random variable. We can do so using several consecutive integration by parts:
+
+$$
+\begin{align*}
+\mathbb{E}[X^4] & = \frac{1}{\sqrt{2\pi}}\int_{-\infty}^{+\infty} x^4e^{-x^2/2}dx \\
+& = \frac{1}{\sqrt{2\pi}}\int_{-\infty}^{+\infty} \underbrace{x^3}_{=u(x)} \times \underbrace{xe^{-x^2/2}}_{v'(x)}dx \\
+& = \frac{1}{\sqrt{2\pi}} \left\{ \underbrace{[-x^3 e^{-x^2/2}]_{-\infty}^{+\infty}}_{= 0} + \int_{-\infty}^{+\infty} 3x^2 e^{-x^2/2}dx \right\}\\
+& = 3 \int_{-\infty}^{+\infty} \frac{x^2}{\sqrt{2\pi}} e^{-x^2/2}dx = 3\mathbb{E}[X^2] = 3
+\end{align*}
+$$
+Plugging this result in the previous expression yields $\mathbb{V}[U] = 2n$. 
+
+
+
