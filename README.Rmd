@@ -105,6 +105,7 @@ learnr::run_tutorial("03_visualisation_basics", package = "learningr")
 ```{r stats, eval = FALSE}
 learnr::run_tutorial("02.1_random_variables", package = "learningr")
 learnr::run_tutorial("02.2_classical_distributions", package = "learningr")
+learnr::run_tutorial("02.3_bivariate_statistics", package = "learningr")
 ```
 
 ### Data visualization

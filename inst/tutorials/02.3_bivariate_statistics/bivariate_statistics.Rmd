@@ -1,0 +1,484 @@
+---
+title: "Bivariate analysis"
+output: 
+  learnr::tutorial:
+    progressive: true
+    allow_skip: true
+runtime: shiny_prerendered
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+library(tidyverse)
+data(pres2017, package = "learningr")
+knitr::opts_chunk$set(echo = TRUE)
+## Variables shared by all exercices
+set.seed(1)
+toy_data_1 <- tibble(sex      = sample(c("F", "M"), size = 100, replace = T), 
+                     location = sample(c("Paris", "Other"), size = 100, replace = T))
+toy_data_2 <- tibble(sex      = c(rep(c("F", "M"), 40), rep('F', 20)),
+                     location = c(rep(c("Paris", "Other"), 30), sample(c("Paris", "Other"), size = 40, replace = T)))
+toy_data_1 <- toy_data_1 %>% mutate(height = rnorm(100, mean = 170, sd = 7), 
+                                    weight = (height/100)^2 * rnorm(100, 22.3, 2.5))
+toy_data_2 <- toy_data_2 %>% mutate(height = rnorm(100, sd = 7) + if_else(sex == "M", 176, 166), 
+                                    weight = (height/100)^2 * (rnorm(100, 0, 2.5) + if_else(sex == "M", 23, 22)))
+theme_set(theme_bw())
+```
+
+## Welcome to this class
+
+### Learning goals
+
+The goal of this class is to acquaint yourself with *bivariate analysis*. It's a set of techniques and quantities that help you probe whether two quantities (measured on the *same units*) are associated or not. The two most common tools are
+
+- contigency tables
+- plots (boxplots, scatter plots, etc)
+- the correlation coefficient
+
+Those notions are covered in Tristan's [slides](https://moodle.cri-paris.org/pluginfile.php/27870/mod_resource/content/1/BivariateAnalysis.pdf) but as a quick reminder, remember that a quantity can be either *qualitative* or *quantitative*. There are thus three possible comparisons:
+
+- qualitative - qualitative
+- quantitative - qualitative
+- quantitative - quantitative
+
+## Qualitative - Qualitative
+
+When comparing two qualitative quantities $X$ and $Y$ taking values in $\{x_1, \dots, x_k\}$ and $\{y_1, \dots, y_l\}$, and recorded on $n$ units we need to compute the contingency table:
+
+$$
+\begin{array}{c|ccccc|c}
+    & y_1 & \dots & y_j & \dots & y_l &\\
+    \hline
+x_1 & n_{11} & \dots & n_{1j} & \dots & n_{1l} & n_{1+} \\
+\vdots & \vdots && \vdots && \vdots & \vdots \\
+x_i & n_{i1} & \dots & n_{ij} & \dots & n_{il} & n_{i+} \\
+\vdots & \vdots && \vdots && \vdots & \vdots \\
+x_k & n_{k1} & \dots & n_{kj} & \dots & n_{kl} & n_{k+} \\
+\hline
+    & n_{+1} & \dots & n_{+j} & \dots & n_{+l} & n
+\end{array}
+$$
+where $n_{ij}$ is the number of units for which $X = x_i$ and $Y = y_j$ and $n_{i+} = \sum_{j=1}^l n_{ij}$ (respectively $n_{+j} = \sum_{i=1}^k n_{ij}$) is the number for which $X = x_i$ (respectively $Y = y_j$). We can also compute its cousin, the joint distribution table:
+
+$$
+\begin{array}{c|ccccc|c}
+    & y_1 & \dots & y_j & \dots & y_l &\\
+    \hline
+x_1 & p_{11} & \dots & p_{1j} & \dots & p_{1l} & p_{1.} \\
+\vdots & \vdots && \vdots && \vdots & \vdots \\
+x_i & p_{i1} & \dots & p_{ij} & \dots & p_{il} & p_{i.} \\
+\vdots & \vdots && \vdots && \vdots & \vdots \\
+x_k & p_{k1} & \dots & p_{kj} & \dots & p_{kl} & p_{k.} \\
+\hline
+    & p_{.1} & \dots & p_{.j} & \dots & p_{.l} & 1
+\end{array}
+$$
+where $p_{ij} = n_{ij} / n$ is the probability that a unit satisfies $X = x_i$ and $Y = y_j$ and the rest are the *marginal* probabilities
+$$
+p_{i.} = \sum_{j = 1}^l p_{ij} = \frac{n_{i+}}{n} \quad \text{and} \quad p_{.j} = \sum_{i = 1}^k p_{ij} = \frac{n_{+j}}{n}
+$$
+
+Roughly speaking, if the vector $(p_{ij})_{i=1\dots k}$ is very different from the vector $(p_{i.})_{i=1\dots k}$ for a given index $j$ (or if the columns of the joint distribution table are very different), we say that $X$ and $Y$ are associated. 
+
+Likewise if $(p_{ij})_{j=1\dots l}$ is very different from the vector $(p_{.j})_{j=1\dots l}$ for a given index $i$, or if the rows of the joint distribution tables are very different. 
+
+We now show how to compute those quantities on simple examples and how to visualize them. 
+
+### Contingency tables
+
+Have a look at the pre-loaded `toy_data_1` and `toy_data_2` datasets where gender (`sex`), place of birth (`location`), height (`height`) and weight (`weight`) of two cohorts of 100 students are recorded:
+
+```{r toy_data, exercise = TRUE}
+
+```
+
+```{r toy_data-solution}
+toy_data_1
+toy_data_2
+```
+
+```{r quiz_table_1, echo = FALSE}
+quiz(caption = "Contigency tables", 
+  question("What's the set of values taken by `sex`", 
+           answer("$\\{F, M\\}$", TRUE), 
+           answer("$\\{Paris, Other\\}$"), 
+           allow_retry = TRUE), 
+  question("What's the set of values taken by `location`", 
+           answer("$\\{F, M\\}$"), 
+           answer("$\\{Paris, Other\\}$", TRUE), 
+           allow_retry = TRUE)
+)
+```
+
+You can use `table(x, y)` to compute the contigency table of two quantities `x` and `y`. 
+
+```{r table, exercise = TRUE}
+table(...)
+```
+
+```{r table-hint-1}
+"Use `toy_data_1$sex` and `toy_data_1$location`"
+```
+
+```{r table-hint-2}
+"Don't forget to divide by $n$ (or `nrow(toy_data_1)` here)."
+```
+
+```{r table-solution}
+table(toy_data_1$sex, toy_data_1$location) / nrow(toy_data_1)
+```
+
+```{r quiz_table_2, echo = FALSE}
+quiz(caption = "Contigency tables (II)", 
+  question("What's the probability that a student from `toy_data_1` is a girl born in Paris?", 
+           answer("0.25", TRUE), 
+           answer("0.24", message = "Wrong, that's for a girl not born in Paris"), 
+           answer("0.23", message = "Wrong, that's for a boy not born in Paris"), 
+           answer("0.28", message = "Wrong, that's for a boy born in Paris"), 
+           allow_retry = TRUE, random_answer_order = TRUE), 
+  question("What's the proportions of boys among students from `toy_data_1`?", 
+           answer("0.51", TRUE), 
+           answer("0.49", message = "Wrong, that's the proportion of girls among the students"), 
+           allow_retry = TRUE, random_answer_order = TRUE), 
+  question("What's the probability that a student from `toy_data_2` is a boy born outside of Paris?", 
+           answer("0.35", TRUE), 
+           answer("0.44", message = "Wrong, that's for a girl not born in Paris"), 
+           answer("0.05", message = "Wrong, that's for a boy born in Paris"), 
+           answer("0.16", message = "Wrong, that's for a girl born in Paris"), 
+           allow_retry = TRUE, random_answer_order = TRUE), 
+    question("What's the proportions of girls among students from `toy_data_2`?", 
+           answer("0.60", TRUE), 
+           answer("0.40", message = "Wrong, that's the proportion of boys."), 
+           allow_retry = TRUE, random_answer_order = TRUE)
+)
+```
+
+Note that you can also use `count()` from the `dplyr` package to compute the same quantities in a slightly different format. 
+
+```{r}
+## contigency tables (long format)
+toy_data_1 %>% count(sex, location) %>% mutate(prob = n / sum(n))
+```
+
+### Barplots
+
+Use `ggplot()` to represent the values of the contingency table using barplots. You can use `count()` instead of `table()` to get tidy summaries. 
+
+```{r barplot_proportions, exercise = TRUE}
+plot_data <- ...
+ggplot(plot_data, ...)
+```
+
+```{r barplot_proportions-hint-1}
+plot_data <- toy_data_1 %>% count(sex, location) %>% mutate(prob = n / sum(n))
+ggplot(plot_data, ...)
+```
+
+```{r barplot_proportions-hint-2}
+plot_data <- toy_data_1 %>% count(sex, location) %>% mutate(prob = n / sum(n))
+ggplot(plot_data, aes(x = sex, y = prob, fill = location)) + ...
+```
+
+```{r barplot_proportions-solution}
+plot_data <- toy_data_1 %>% count(sex, location) %>% mutate(prob = n / sum(n))
+ggplot(plot_data, aes(x = sex, y = prob, fill = location)) + geom_col(position = "stack")
+```
+### Barplots (II)
+
+When plotting the same graphics for `toy_data_2 we observe a problem: there are many more girls than boys in the dataset and it's hard to compare the bars. 
+
+```{r}
+plot_data <- toy_data_2 %>% count(sex, location) %>% mutate(prob = n / sum(n))
+ggplot(plot_data, aes(x = sex, y = prob, fill = location)) + geom_col(position = "stack")
+```
+
+We can fix this by plotting the *conditional probabilities*: for example, the probability that a student was born in Paris knowing she's a girl, or in formal terms:
+
+$$
+\mathbb{P}(\{ \text{student born in Paris} \} \, | \, \{ \text{student is a girl} \}) = \frac{\mathbb{P}(\{ \text{student born in Paris} \} \cap   \{ \text{student is a girl} \})}{\mathbb{P}(\{ \text{student is a girl} \})}
+$$
+
+Try to compute those quantities using `count()`, `group_by()` and `mutate()`
+
+```{r conditional_probabilities, exercise = TRUE}
+toy_data_2 %>% count(sex, location) %>% mutate(prob = n / sum(n)) %>%
+  ...
+```
+
+```{r conditional_probabilities-hint-1}
+toy_data_2 %>% count(sex, location) %>% mutate(prob = n / sum(n)) %>%
+  group_by(sex) %>% ...
+```
+
+```{r conditional_probabilities-solution}
+toy_data_2 %>% count(sex, location) %>% mutate(prob = n / sum(n)) %>%
+  group_by(sex) %>% mutate(cond_prob = prob / sum(prob))
+```
+
+Reproducing the graph with the conditional probabilities makes it easier to read:
+
+```{r, echo = FALSE}
+plot_data <- toy_data_2 %>% count(sex, location) %>% mutate(prob = n / sum(n)) %>% group_by(sex) %>% mutate(cond_prob = prob / sum(prob))
+ggplot(plot_data, aes(x = sex, y = cond_prob, fill = location)) + geom_col(position = "stack")
+```
+
+In particular, it's quite obvious that there is an association between `sex` and `location` in `toy_data_2`: girls are more likely to be born in Paris and boys outside of Paris. 
+
+## Quantitative - Qualitative
+
+We're now going to compare the gender (qualitative) and the height (quantitative). A very simple way to do so is to split the population into several subpopulations (one per gender) and to compute summary statistics (mean, variance, etc) on each subpopulation. We can then compute them across population (using for example a t-test). 
+
+### Summary statistics in each sub-population
+
+Compute the mean height (and its standard deviation) of boys and girls in `toy_data_1`
+
+```{r summary_statistics, exercise = TRUE}
+toy_data_1 %>% ...
+```
+
+```{r summary_statistics-hint-1}
+"Use group_by() and summrize()"
+```
+
+```{r summary_statistics-hint-2}
+toy_data_1 %>% group_by(...) %>% summarise(...)
+```
+
+```{r summary_statistics-solution}
+toy_data_1 %>% group_by(sex) %>% summarise(mean = mean(height), sd = sd(height))
+```
+
+```{r height_data_1, echo = FALSE}
+quiz(caption = "Mean height (`toy_data_1`)", 
+  question("Among students from `toy_data_1`, would you say that", 
+           answer("boys are taller", TRUE), 
+           answer("girls are taller"), 
+           allow_retry = TRUE, random_answer_order = TRUE), 
+  question("Would you say that the difference between gender is", 
+           answer("small compared to the natural variability in each gender", TRUE), 
+           answer("large compared to the natural variability in each gender"), 
+           allow_retry = TRUE, random_answer_order = TRUE, post_message = "The observed difference is $\\simeq 3$, which is quite small compared to the dispersion in each gender ($\\simeq 6$ for girls, $\\simeq 8$ for boys).")
+)
+```
+
+```{r height_data_2, echo = FALSE}
+quiz(caption = "Mean height (`toy_data_2`)", 
+  question("Among students from `toy_data_2`, would you say that", 
+           answer("boys are taller", TRUE), 
+           answer("girls are taller"), 
+           allow_retry = TRUE, random_answer_order = TRUE), 
+  question("Would you say that the difference between gender is", 
+           answer("small compared to the natural variability in each gender"), 
+           answer("large compared to the natural variability in each gender", TRUE), 
+           allow_retry = TRUE, random_answer_order = TRUE, post_message = "The observed difference is $\\simeq 9$, which is quite large compared to the dispersion observed in each gender ($\\simeq 7.5$ for girls, $\\simeq 6$ for boys). The result of a t-test would probably be significant.")
+)
+```
+
+### Box/Violin/Density plots {.tabset}
+
+One way of looking at the different heights in each subpopulations is to use boxplots, violinplots, histograms or densities. We illustrate the first three on `toy_data_1` to emphasize that gender based differences are small. 
+
+#### Boxplot
+
+```{r, echo = FALSE}
+ggplot(toy_data_1, aes(x = sex, y = height, fill = sex)) +  geom_boxplot(alpha = 0.3) + geom_point(aes(color = sex), position = position_jitterdodge(jitter.width = 0.2))
+```
+
+#### Violinplot
+
+```{r, echo = FALSE}
+ggplot(toy_data_1, aes(x = sex, y = height, fill = sex)) +  geom_violin()
+```
+
+#### Histogram
+
+```{r, echo = FALSE}
+ggplot(toy_data_1, aes(x = height, fill = sex)) +  geom_histogram(position = "identity", alpha = 0.3, binwidth = 2)
+```
+
+### Comparative plots {.tabset}
+
+Reproduce the previous graphs on `toy_data_2`. How do the genders compare?
+
+#### Boxplot
+
+```{r boxplot, exercise = TRUE}
+
+```
+
+```{r boxplot-solution}
+ggplot(toy_data_2, aes(x = sex, y = height, fill = sex)) +  
+  geom_boxplot(alpha = 0.3) + ## We used alpha to make the boxes transparent
+  geom_point(aes(color = sex), 
+             position = position_jitterdodge(jitter.width = 0.2)) ## we added jitter to the points to avoid overcrowding
+```
+
+#### Violinplot
+
+```{r violinplot, exercise = TRUE}
+
+```
+
+```{r violinplot-solution}
+ggplot(toy_data_2, aes(x = sex, y = height, fill = sex)) +  geom_violin()
+```
+
+#### Histogram
+
+```{r histogram, exercise = TRUE}
+
+```
+
+
+```{r histogram-solution}
+ggplot(toy_data_2, aes(x = height, fill = sex)) +  
+  ## We added alpha to have transparent bars and change the default bin width
+  geom_histogram(position = "identity", alpha = 0.3, binwidth = 2)
+```
+
+
+## Quantitative - Quantitative
+
+We're now going to compare the height (quantitative) and the weight (quantitative). The most popular metric to compare two quantitative quantities is the *correlation*. We'll recall its formal definition, learn how to compute it and finally give a word of caution about its limitations. 
+
+### Covariance
+
+The covariance between two real-valued random variables $X$ and $Y$ is defined as:
+
+$$
+\sigma_{X,Y} = \mathbb{E}\left[ \underbrace{(X - \mathbb{E}[X])}_{\text{deviations of } X \\ \text{from } \mathbb{E}[X]} \times \underbrace{(Y - \mathbb{E}[Y])}_{\text{deviations of } Y \\ \text{from } \mathbb{E}[Y]} \right] = \mathbb{E}[XY] - \mathbb{E}[X]\mathbb{E}[Y]
+$$
+
+$\sigma_{X,Y}$ measures whether $X - \mathbb{E}[X]$ and $Y - \mathbb{E}[Y]$ move in the same direction at the same times, or in other words, if deviations of $X$ and $Y$ from their mean values are (linearly) associated. 
+
+If $X$ and $Y$ are discrete and take values in $\{x_1, \dots, x_k\}$ and $\{y_1, \dots, y_l\}$, the expectation is a sum:
+$$
+\sigma_{X,Y} = \sum_i \sum_j (x_i - \mathbb{E}[X])(y_j - \mathbb{E}[Y]) \times \mathbb{P}(X = x_i,\, Y = y_j)
+$$
+whereas if they are continuous, it's an integral:
+$$
+\sigma_{X,Y} = \int_x \int_y (x -\mathbb{E}[X])(y - \mathbb{E}[X]) f_{X,Y}(x, y)dxdy
+$$
+
+When we don't have access to the full distribution but only to a sample of size $n$, $(x_1, y_1), \dots, (x_n, y_n)$, we compute the *empirical covariance* where the expectations are replaced by plug-ins:
+$$
+\hat{\sigma}_{X,Y} = \frac{1}{n}\sum_{i=1}^n (x_i - \bar{x})(y_i - \bar{y})
+$$
+where $\bar{x} = \frac{1}{n} \sum_{i=1}^n x_i$ and $\bar{y} = \frac{1}{n} \sum_{i=1}^n y_i$. 
+
+Use `cov()` to compute the covariance of height and weight in `toy_data_1`:
+
+```{r cov, exercise = TRUE}
+cov(...)
+```
+
+```{r cov-hint-1}
+cov(x = toy_data_1$..., y = toy_data_1$...)
+```
+
+```{r cov-solution}
+cov(x = toy_data_1$height, y = toy_data_1$weight)
+```
+
+```{r quizz-cov, echo = FALSE}
+question("The covariance of `height` and `weight` is", 
+         answer("large"), 
+         answer("small"),
+         answer("medium"),
+         answer("hard to tell", correct = TRUE),
+         post_message = "Indeed, the covariance has no intrinsic *scaling*: if I multiply all values of $X$ by 2, I also multiply $\\sigma_{X,Y}$ by 2. It is thus hard to tell if a given covariance value is large or small without a reference value..."
+         )
+```
+
+### Correlation 
+
+To alleviate the scaling problem of the covariance mentionned previously, it's customary to use the correlation instead defined as:
+
+$$
+\rho_{X, Y} = \frac{\sigma_{X,Y}}{\sqrt{\sigma_{X,X} \sigma_{Y,Y}}}
+$$
+
+Looking at the formula, you can see that $\sigma_{X,X}$ is the variance of $X$ and $\sqrt{\sigma_{X,X}}$ is thus its standard deviation which you can understand as a *reference scale* for $X$. You can also notice that the correlation is invariant to affine transformations:
+$$
+\forall (\lambda, \mu) \in \mathbb{R}^\star, \; \rho_{\lambda X, \mu Y} = \rho_{X,Y}
+$$
+
+In other words, $\rho_{X, Y}$ does not suffer from scaling issue and always takes values in $[-1, 1]$. It can be interpreted as follows:
+
+- $\rho_{X,Y} \simeq 1 \Rightarrow$ positive linear relationship between $X$ and $Y$
+- $\rho_{X,Y} \simeq -1 \Rightarrow$ negative linear relationship between $X$ and $Y$
+- $\rho_{X,Y} \simeq 0 \Rightarrow$ no linear relationship between $X$ and $Y$
+
+Use `cor()` to compute the correlation of height and weight in `toy_data_1`:
+
+```{r cor, exercise = TRUE}
+cor(...)
+```
+
+```{r cor-hint-1}
+cor(x = toy_data_1$..., y = toy_data_1$...)
+```
+
+```{r cor-solution}
+cor(x = toy_data_1$height, y = toy_data_1$weight)
+```
+
+```{r quizz-cor, echo = FALSE}
+question("The correlation of `height` and `weight` suggest", 
+         answer("a positive linear relationship between `height` and `weight`", correct = TRUE), 
+         answer("a negative linear relationship between `height` and `weight`"), 
+         answer("no linear relationship between `height` and `weight`"),
+         post_message = "Indeed, the correlation coefficient is 0.578 which is quite large and suggest a positive linear relationship."
+         )
+```
+
+### Scatterplots
+
+In addition to computing the correlation coefficient, it is good practice to look at the data using a *scatter plot*. Use `ggplot()` to produce a scatter plot of height against weight. 
+
+```{r scatterplot, exercise = TRUE}
+ggplot(...)
+```
+
+```{r scatterplot-solution}
+ggplot(toy_data_1, aes(x = height, y = weight)) + geom_point()
+```
+
+Although the relationship is not perfectly linear, the graph is strongly indicative of a positive relationship between the height and the weight. 
+
+```{r cor-2, exercise = TRUE}
+
+```
+
+```{r quizz-cor-2, echo = FALSE}
+question("Which of `toy_data_1` and `toy_data_2` has the strongest association between `height` and `weight`?", 
+         answer("`toy_data_1`"), 
+         answer("`toy_data_2`", correct = TRUE),
+         post_message = "The correlation is 0.58 in `toy_data_1` and 0.67 in`toy_data_2`. It is thus stronger in `toy_data_2`.")
+```
+
+### Warning
+
+The correlation only reveals for **linear** relationships: it may miss genuine but non-linear relationships and/or be confused by non linear relationship as illustrated below. 
+
+```{r echo = FALSE, warning=FALSE, message=FALSE}
+anscombe_data <- anscombe %>% 
+  pivot_longer(everything(), names_to = c("variable", "dataset"), names_pattern = "(.)(.)") %>% 
+  pivot_wider(names_from = "variable", values_from = "value", values_fn = list) %>% 
+  unnest(cols = c(x, y))
+ggplot(anscombe_data, aes(x = x, y = y)) + 
+  geom_point() + 
+  facet_wrap(~dataset) + 
+  geom_text(data = anscombe_data %>% group_by(dataset) %>% 
+              summarize(cor = cor(x, y)) %>% mutate(rho = paste("rho == ", format(cor, digits = 3))), 
+            aes(x = -Inf, y = +Inf, label = rho), parse = TRUE, 
+            hjust = -0.01, vjust = 1.01)
+  
+```
+
+
+## Conclusion
+
+Congratulations ! You now have all the tools at your disposal to compare two quantities. 
+
+Remember to always have a look at your data, the computer is great for computing and plotting things but your eye is also a very efficient tool to detect patterns. 
