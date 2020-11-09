@@ -108,6 +108,9 @@ This package is intended for use with `learnr`:
 library(learnr)
 ```
 
+You should only launch **one** tutorial at the time. Before launching a
+new tutorial, **restart R**.
+
 ### Basics of programmings
 
 ``` r
@@ -148,6 +151,14 @@ learnr::run_tutorial("05.3_summaries", package = "learningr")
 ``` r
 learnr::run_tutorial("06.1_sampling", package = "learningr")
 learnr::run_tutorial("06.2_testing", package = "learningr")
+```
+
+## Tidy data
+
+``` r
+learnr::run_tutorial("07.1_reshape_data", package = "learningr")
+learnr::run_tutorial("07.2_separate_columns", package = "learningr")
+learnr::run_tutorial("07.3_join_datasets", package = "learningr")
 ```
 
 ## Troubleshooting
