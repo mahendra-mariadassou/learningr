@@ -33,7 +33,7 @@ The goal of this class is to provide a numerical illustration of random variable
 
 You can think of a random variable as a variable whose values depend on outcomes of a random phenomenon. 
 
-- A very simple example is the throw of a (standard) dice. It can take any value in $\{1, 2, 3, 4, 5, 6\}$ but you don't known which one until you actually throw the dice. 
+- A very simple example is the roll of a (standard) dice. It can take any value in $\{1, 2, 3, 4, 5, 6\}$ but you don't known which one until you actually roll the dice. 
 
 - Another one is the weight of an adult human. It can take any value between 2.1 and 635 kilograms (those are the actual docuemented world records) yet you don't known which one until you pick the actual adult. 
 
@@ -133,9 +133,9 @@ We've seen previously that different random variables can be encoded using diffe
 
 ### Overview
 
-Let's move back to our dice example. If the dice is fair, when we throw the dice once, we're equally likely to get $1, 2, \dots, 6$. A simple way to mimick this in R is with the `sample()` function. 
+Let's move back to our dice example. If the dice is fair, when we roll the dice once, we're equally likely to get $1, 2, \dots, 6$. A simple way to mimick this in R is with the `sample()` function. 
 
-Look at the help of `sample()` using `?sample()` (possibly in another session) and complete the following code to throw a dice in your computer. Repeat multiple times and try to understand what happens. 
+Look at the help of `sample()` using `?sample()` (possibly in another session) and complete the following code to roll a dice in your computer. Repeat multiple times and try to understand what happens. 
 
 ```{r sample_question, exercise = TRUE}
 sample(, size = 1)
@@ -145,16 +145,16 @@ sample(, size = 1)
 sample(x = 1:6, size = 1) ## remember that 1:6 is a shortcut for c(1, 2, 3, 4, 5, 6)
 ```
 
-### Multiple throws
+### Multiple rolls
 
-Imagine now that you want to mimick mutiple throws. 
+Imagine now that you want to mimick mutiple rolls. 
 
-- You choose one value between $1$ and $6$ uniformly at random for the first throw. Let's say you end up with $3$. 
+- You choose one value between $1$ and $6$ uniformly at random for the first roll. Let's say you end up with $3$. 
 - You then pick again one value between at random between $1$ and $6$ but you still have access to $3$. 
 
 This is called *sampling with replacement*. 
 
-Complete the code to generate a sample of 10 dice throws using `sample()`. 
+Complete the code to generate a sample of 10 dice rolls using `sample()`. 
 
 ```{r sample_w_replacement, exercise = TRUE}
 sample()
@@ -262,11 +262,11 @@ first_and_second_diamonds <- sample(x = jar, size = 2, replace = FALSE)
 
 ### Finite versus infinite populations
 
-The biggest difference between finite populations (diamonds) and infinite populations (dice throws) is that you can throw a dice infinitely many times but you run out of diamonds at some point. 
+The biggest difference between finite populations (diamonds) and infinite populations (dice rolls) is that you can roll a dice infinitely many times but you run out of diamonds at some point. 
 
 In particular:
 
-- the results of 10 dice throws are likely to differ whereas
+- the results of 10 dice rolls are likely to differ whereas
 - you end up with the **exact same** diamonds if you pick 16 diamonds from the previous jar (although you may pick them in differnt orders). 
 
 Futhermore, whenever the random variable is associated to a **finite population**, it is **discrete**. Indeed if the population has size $N$, the random variables takes at most $N$ different values (and often less than that, as in our diamond example). 
@@ -290,6 +290,7 @@ We're going to illustrate the notions of
 - Expectation
 - Standard deviation
 - Cumulative distribution function
+- Quantiles
 
 on finite populations using our diamonds in a jar example. Those concepts can be extended to infinite populations (or equivalently random variables that can take infinitely many values) but we'll leave that for later. 
 
@@ -347,7 +348,7 @@ question("Select all possible values for $\\mathbb{P}(X = x)$:",
 
 There is no straighforward way to build the pdf of $X$ (there is for standard random variables). You can however build a related quantity: the frequency of different diamond sizes in the full populations using `table()` 
 
-```{r table-example}
+```{r table-example, echo = TRUE}
 jar <- rep(c(1, 4, 8), times = c(10, 5, 1))
 table(jar)
 ```
@@ -469,7 +470,7 @@ expectation_of_y
 
 Computing $\mathbb{E}(Y)$ from the second formula is slightly more involved. The following code allows you to do it but is rarely used in practice. 
 
-```{r mean_second_formula}
+```{r mean_second_formula, echo = TRUE}
 ## Find values of Y 
 values_of_y <- as.numeric(names(table(large_jar)))
 values_of_y
@@ -549,7 +550,7 @@ auto_var <- var(large_jar)
 auto_var - manu_var
 ```
 
-It seems that there is a small but no null difference between the two quantities. That's normal. For reasons you'll understand later, the variance $\mathbb{V}_R(X)$ computed by `var()` (and by the same function in most computer languages) is slightly different from the one defined above. The two are related by the relation  
+It seems that there is a small but non null difference between the two quantities. That's normal. For reasons you'll understand later, the variance $\mathbb{V}_R(X)$ computed by `var()` (and by the same function in most computer languages) is slightly different from the one defined above. The two are related by the relation  
 
 $$
 \mathbb{V}_R(X) = \frac{N}{N-1} \mathbb{V}(X) = \frac{1}{N-1} \sum_{i=1}^N \left( x_i - \mathbb{E}(X) \right)^2
@@ -678,17 +679,18 @@ $$
 And therefore that $4$ is the quantile or order 70\%. However, because $X$ is discrete we **can't** say 70% of the diamond sizes are smaller than 4. In fact, if you look carefully at the graph (and the definition), you can see that $4$ is the quantile of order 70\% but also of order 90\% and in fact or any order between $\frac{5}{8}$ (= 62.5\%) and $\frac{15}{16}$ (= 93.75\%)
 
 ```{r quantile_question}
-question("What is the quantile of order 50% of the sequence $\\{1, \\dots, 100, \\}?", 
+question("What is the quantile of order 50% of the sequence $\\{0, \\dots, 100, \\}$?", 
          answer("1"),
          answer("50", correct = TRUE), 
-         answer("51"), 
+         answer("51", message = "Almost. Count the number of elements lower than 51 and the number of elements higher than 51. Are they equal ?"), 
          answer("100"), 
-         allow_retry = TRUE)
+         allow_retry = TRUE, 
+         correct = "The quantile of order 50%, or middle point, of $\\{0, \\dots, 100, \\}$ is indeed $51$ as there are exactly 50 values before it and 50 values after it.")
 ```
 
 You can compute several quantiles of a random variable using the `quantile()` function. 
 
-```{r quantile_jar_example}
+```{r quantile_jar_example, echo = TRUE}
 quantile(x = jar, probs = c(0.7, 0.9))
 ```
 
@@ -708,9 +710,3 @@ quantile(x = , probs = )
 ```{r quantile_large_jar-solution}
 quantile(x = large_jar, probs = 0.5)
 ```
-
-<!-- ## Classic probability distributions -->
-
-<!-- ### Normal distribution (also called standard distribution) -->
-
-<!-- ### Chi-square ($\chi^2$) distribution -->
