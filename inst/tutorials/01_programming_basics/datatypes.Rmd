@@ -280,7 +280,7 @@ iris
 
 You can think of vector as 1D arrays of values with the **same type** (e.g. numeric, characters, etc). Unlike Python, indexing is 1-based meanin that the first element is in position `1` (and not `0`).
 
-You can easily create characters with the `c()` function (or the shortcut `:` for integer sequences). 
+You can easily create vectors with the `c()` function (or the shortcut `:` for integer sequences). 
 
 ```{r vector_creation, echo = TRUE}
 x <- c(2, 3, 4, 5) ## equivalent to 2:5
