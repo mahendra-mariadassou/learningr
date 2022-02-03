@@ -94,7 +94,7 @@ quiz(
            answer("$x = 0$", TRUE), 
            answer("$x = 1$"), 
            answer("None of the above"), 
-           correct = "The density is maximum for $x = 0$ as $z \\mapsto e^z$ is strictly increasing and the maximum of $x\\maps -x^2$ is reached for $x = 0$."
+           correct = "The density is maximum for $x = 0$ as $z \\mapsto e^z$ is strictly increasing and the maximum of $x\\maps -x^2$ is reached for $x = 0$.",
            allow_retry = TRUE), 
   question("For fixed $\\mu$ and fixed $x$, when $\\sigma$ increases, $f_{\\mu, \\sigma}(x)$", 
            answer("increases"), 
