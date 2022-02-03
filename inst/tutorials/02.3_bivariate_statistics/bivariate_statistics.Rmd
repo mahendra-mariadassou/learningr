@@ -35,7 +35,7 @@ The goal of this class is to acquaint yourself with *bivariate analysis*. It's a
 - plots (boxplots, scatter plots, etc)
 - the correlation coefficient
 
-Those notions are covered in Tristan's [slides](https://moodle.cri-paris.org/pluginfile.php/27870/mod_resource/content/1/BivariateAnalysis.pdf) but as a quick reminder, remember that a quantity can be either *qualitative* or *quantitative*. There are thus three possible comparisons:
+Those notions are covered in Tristan's [slides](https://moodle.u-paris.fr/mod/resource/view.php?id=425975) but as a quick reminder, remember that a quantity can be either *qualitative* or *quantitative*. There are thus three possible comparisons:
 
 - qualitative - qualitative
 - quantitative - qualitative
