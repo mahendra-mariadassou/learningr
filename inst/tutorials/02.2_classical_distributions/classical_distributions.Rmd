@@ -220,7 +220,7 @@ $$
 
 ### Mean and variance
 
-Let's now compute the expectation and standard devation of a gaussian random variable. With the previous remark, we first compute them for $X \sim \mathcal{N}(0, 1)$ and will then extend it to more general variables $X \sim \mathcal{N}(\mu, \sigma)$. 
+Let's now compute the expectation and standard deviation of a gaussian random variable. With the previous remark, we first compute them for $X \sim \mathcal{N}(0, 1)$ and will then extend it to more general variables $X \sim \mathcal{N}(\mu, \sigma)$. 
 
 #### Expectation
 
