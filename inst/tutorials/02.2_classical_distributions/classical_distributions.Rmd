@@ -188,7 +188,7 @@ dnorm(x = x, mean = mu, sd = sigma) - a*dnorm(x = a*x, mean = a * mu, sd = a*sig
 
 In terms of density, noting $y = ax$, this means that $f_{\mu, a\sigma}(y)dy = f_{\mu, \sigma}(x)dx$
 $$
-f_{\mu, a\sigma}(y)dy = f_{\mu, a\sigma}(ax)d(ax) = \frac{1}{a\sigma\sqrt{2\pi}}e^{-\frac{(ax - a \mu)^2}{2\sigma^2}} adx= \frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{(x - \mu)^2}{2\sigma^2}} dx = f_{\mu, \sigma}(x)dx
+f_{\mu, a\sigma}(y)dy = f_{\mu, a\sigma}(ax)d(ax) = \frac{1}{a\sigma\sqrt{2\pi}}e^{-\frac{(ax - a \mu)^2}{2(a\sigma)^2}} adx= \frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{(x - \mu)^2}{2\sigma^2}} dx = f_{\mu, \sigma}(x)dx
 $$
 To make the connection explcit in terms of random variables, 
 $$
