@@ -19,11 +19,11 @@ knitr::opts_chunk$set(
 [![binder](https://github.com/mahendra-mariadassou/learningr/workflows/binder/badge.svg)](https://mybinder.org/v2/gh/mahendra-mariadassou/learningr/master)
 <!-- badges: end -->
 
-The goal of learningr is to provide interactive tutorials for the statistics classes given by Tristan for UE 2.3. The tutorial are shamelessly taken from [rstudio-education](https://rstudio.cloud/learn/primers) for the basics of R and the tidyverse. Tutorials are packaged so you can install them on you computer and do the exercices without access to an internet connection. 
+The goal of learningr is to provide interactive tutorials for the statistics classes given by Tristan for UE 2.4. The tutorial are shamelessly taken from [rstudio-education](https://rstudio.cloud/learn/primers) for the basics of R and the tidyverse. Tutorials are packaged so you can install them on you computer and do the exercices without access to an internet connection. 
 
 ## Installation
 
-### Local installation
+### Installing R and other dependencies
 
 You only need to perform each of the following steps **once**:
 
@@ -68,11 +68,11 @@ On **MacOS**: you may need **XCode**
 
 - **XCode**: visit the dedicated [page](https://mac.r-project.org/tools/), download the **Mandatory tools** and install them on your computer
 
-#### Installation (II)
+## Installing the tutorials
 
 You need to install the tutorials **every time** there is an update (hopefully not too often)
 
-### Installing the tutorials
+### Installing the tutorials for the first time
 
 You can install the tutorials from [GitHub](https://github.com/) by launching Rstudio and typing the following command in the console:
 
@@ -83,6 +83,14 @@ remotes::install_github("mahendra-mariadassou/learningr")
 Alternatively, you can use a remote R session to complete the tutorial by launching binder:  [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mahendra-mariadassou/learningr/master?urlpath=rstudio)
 
 You only need a web browser, no account or anything and the tutorials will always be up to date. The main drawbacks of this solution (compared to the previous one) are that (i) you lose your progress each time you launch a new session and (ii) the binder image may take some time to launch (usually a few minutes). 
+
+### Updating the tutorials
+
+Whenever I fix a bug / typo or add new content, you need to update the tutorials on your computer. To do so, start a fresh Rstudio session and type the following command in the console:
+
+``` r
+remotes::install_github("mahendra-mariadassou/learningr")
+```
 
 ## Starting a tutorial
 

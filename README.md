@@ -9,7 +9,7 @@
 <!-- badges: end -->
 
 The goal of learningr is to provide interactive tutorials for the
-statistics classes given by Tristan for UE 2.3. The tutorial are
+statistics classes given by Tristan for UE 2.4. The tutorial are
 shamelessly taken from
 [rstudio-education](https://rstudio.cloud/learn/primers) for the basics
 of R and the tidyverse. Tutorials are packaged so you can install them
@@ -18,13 +18,13 @@ connection.
 
 ## Installation
 
-### Local installation
+### Installing R and other dependencies
 
 You only need to perform each of the following steps **once**:
 
-  - installing **R**
-  - installing **Rstudio**
-  - installing **R** packages `remotes` and `learnr`
+-   installing **R**
+-   installing **Rstudio**
+-   installing **R** packages `remotes` and `learnr`
 
 However each of them may take some time.
 
@@ -33,12 +33,10 @@ However each of them may take some time.
 Go to the CRAN [webpage](https://cran.r-project.org/), select your OS
 and follow the instructions.
 
-  - On Windows, you should just download and execute an .exe file.
-  - On MacOS, you should just download and execute a .pkg file.
-  - On Linux, you can get install R from the command line using
+-   On Windows, you should just download and execute an .exe file.
+-   On MacOS, you should just download and execute a .pkg file.
+-   On Linux, you can get install R from the command line using
     something like
-
-<!-- end list -->
 
 ``` bash
 ## If you're on Ubuntu
@@ -63,25 +61,25 @@ install.packages("learnr")
 
 On **Windows**: you may need **Rtools** and **git**
 
-  - **Rtools**: visit the dedicated
+-   **Rtools**: visit the dedicated
     [page](https://cran.r-project.org/bin/windows/Rtools/), download the
     suggested exe and install it on your computer
-  - **git**: visit the dedicated
+-   **git**: visit the dedicated
     [page](https://git-scm.com/download/win), download the suggested exe
     and install it on your computer
 
 On **MacOS**: you may need **XCode**
 
-  - **XCode**: visit the dedicated
+-   **XCode**: visit the dedicated
     [page](https://mac.r-project.org/tools/), download the **Mandatory
     tools** and install them on your computer
 
-#### Installation (II)
+## Installing the tutorials
 
 You need to install the tutorials **every time** there is an update
 (hopefully not too often)
 
-### Installing the tutorials
+### Installing the tutorials for the first time
 
 You can install the tutorials from [GitHub](https://github.com/) by
 launching Rstudio and typing the following command in the console:
@@ -99,6 +97,16 @@ will always be up to date. The main drawbacks of this solution (compared
 to the previous one) are that (i) you lose your progress each time you
 launch a new session and (ii) the binder image may take some time to
 launch (usually a few minutes).
+
+### Updating the tutorials
+
+Whenever I fix a bug / typo or add new content, you need to update the
+tutorials on your computer. To do so, start a fresh Rstudio session and
+type the following command in the console:
+
+``` r
+remotes::install_github("mahendra-mariadassou/learningr")
+```
 
 ## Starting a tutorial
 
