@@ -180,3 +180,29 @@ rmarkdown::run(file = NULL,
                                                 package = "learningr"), 
                shiny_args = list(launch.browser = 1))
 ```
+
+## Homework
+
+Instructions for the homework are available on
+[Moodle](https://moodle.u-paris.fr/mod/assign/view.php?id=461131).
+
+The main file is a Rmd (similar to a jupyter notebook). You must write R
+code in **code chuncks**.
+
+![](inst/images/chunk-parts.png)
+
+You should **knit** the document to an html file once to get the raw
+results. You can do so by clicking on the knit button.
+
+![](inst/images/knit_button.png)
+
+You can also execute each chunck in the console (like in a Jupyter
+notebook) using the small green triangle (note that you should execute
+chuncks in turn as a chunck may depend on the result of previous
+chuncks).
+
+![](inst/images/run_code.png)
+
+When you’re done adding comments and editing the document (for example,
+hiding some output from the final reports), you should knit it to a html
+file and submit the Rmd (not the html) to moodle.
