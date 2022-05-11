@@ -1,0 +1,213 @@
+---
+title: "Michaelis Menten"
+output: 
+  learnr::tutorial:
+    progressive: true
+    allow_skip: true
+runtime: shiny_prerendered
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+library(dplyr)
+library(ggplot2)
+knitr::opts_chunk$set(echo = FALSE)
+## Variables shared by all exercices
+set.seed(1)
+concentrations <- c(0.02, 0.02, 0.06, 0.06, 0.11, 0.11, 0.22, 0.22, 0.56, 0.56, 
+1.1, 1.1)
+micmem <- function(conc, Vm = 203, K = 0.055) {
+  Vm * conc / (K + conc)
+}
+micmem_data <- tibble(
+  conc  = concentrations,
+  veloc = micmem(conc)
+)
+micmem_data_exp <- tibble(
+  conc  = concentrations,
+  veloc = micmem(conc) + rnorm(n = length(concentrations), sd = 8)
+)
+erreur_quadratique <- function(conc, veloc, Vm, K) {
+  veloc_theo <- micmem(conc, Vm, K)
+  sum( (veloc - veloc_theo)^2 )
+}
+plot_micmem <- function(Vm, K, arrows = FALSE, data = micmem_data) {
+  p <- ggplot(data = data, aes(x = conc)) +
+    geom_point(aes(y = veloc))  + 
+    stat_function(fun= ~ micmem(.x, Vm = Vm, K = K), color = "red") + 
+    # geom_line(aes(y = veloc_theo), color = 'red') + 
+    labs(title    = glue::glue("Courbe de Michaelis-Menten pour Vm = {Vm} et K = {K}"), 
+         subtitle = "Courbe théorique en rouge, données observées en noir")
+  if (arrows) {
+    p <- p + geom_segment(aes(xend = conc, y = micmem(conc, Vm, K), yend = veloc), 
+                          arrow = arrow(length = unit(0.2, "cm")), 
+                          linetype = "dashed")
+  }
+  p
+}
+plot_contour <- function(Vm_range = c(0, 300), K_range = c(0, 0.1), data = micmem_data) {
+    f <- Vectorize(function(K,Vm) {erreur_quadratique(data$conc, data$veloc, Vm = Vm, K = K)})
+  K <- seq(K_range[1], K_range[2], length.out = 101)
+  Vm <- seq(Vm_range[1], Vm_range[2], length.out = 101)
+  z <- outer(K, Vm,
+             FUN = function(x, y) { f(K = x, Vm = y) |> log10()}
+  )
+  par(mar = c(4, 4, 2.5, 1))
+  image(K, Vm, z,
+        xlab = expression(K[M]),
+        ylab = expression(v[max]),
+        main = "Erreur quadratique (échelle logarithmique)")
+  contour(K, Vm, z, add = TRUE)
+}
+```
+
+## Équation de Michaelis-Menten
+
+L'ensemble des informations de ce tutoriel est extrait de [l'article wikipédia français sur le sujet](https://fr.wikipedia.org/wiki/%C3%89quation_de_Michaelis-Menten). 
+
+L’équation de Michaelis-Menten (ou de Michaelis-Menten-Henri) permet de décrire la cinétique d'une réaction catalysée par une enzyme agissant sur un substrat unique pour donner irréversiblement un produit. Elle relie la vitesse stationnaire initiale de la réaction à la concentration initiale en substrat et à des paramètres caractéristiques de l'enzyme.
+
+Selon le modèle de Michaelis et Menten, l'équation décrivant la vitesse initiale stationnaire d'une réaction enzymatique est la suivante : 
+
+$$
+{\displaystyle v_i ={\frac {\mathrm {d} [{\text {P}}]}{\mathrm {d} t}}=v_{\max }{\frac {[{\text {S}}]}{K_{\mathrm {M} }+[{\text {S}}]}}}
+$$
+
+où
+
+- $[S]$ est la concentration du substrat
+- $v_i$ est la vitesse initiale de la réaction en l'absence du produit
+- $v_{\max}$ est la vitesse initiale maximale
+- $K_M$ est la constante de Michaelis de l'enzyme: la valeur de $[S]_0$ pour laquelle la vitesse initiale est la moitié de la vitesse maximale (obtenu à saturation du produit). 
+
+## Détermination des constantes (cas idéal)
+
+Un des objectifs de nombreuses expériences est d'estimer les constantes $K_M$ et $V_{\max}$. On va proposer plusieurs méthodes pour le faire. 
+
+### Méthode graphique 
+
+On mesure la vitesse initiale (`veloc`) et les concentrations initiales (`conc`) dans différentes expériences.
+
+```{r, echo = TRUE}
+micmem_data
+```
+
+Tracer le graphique de $v_i$ en fonction de $[S]$ et proposer une méthode graphique pour déterminer $K_M$ et $V_{\max}$. 
+
+```{r graphical-method, exercise = TRUE}
+
+```
+
+```{r graphical-method-solution}
+ggplot(micmem_data, aes(x = conc, y = veloc)) + 
+  geom_point() + 
+  geom_line() + 
+  ylim(c(0, NA))
+```
+
+### Méthode linéaire (Eadie-Hofstee)
+
+On peut transformer la relation entre $v_\max$ et $v_i$ pour l'écrire de la façon suivante:
+
+$$
+v_i = v_\max - K_M \times \frac{v_i}{[S]}
+$$
+
+avant de faire une régression linéaire entre $y = v_i$ et $x = \frac{v_i}{[S]}$. Montrer que la relation est bien linéaire. 
+
+```{r graphical-method-eh, exercise = TRUE}
+
+```
+
+```{r graphical-method-eh-solution}
+ggplot(micmem_data, aes(x = veloc / conc, y = veloc)) + 
+  geom_point() + 
+  geom_line() + 
+  ylim(c(0, NA))
+```
+
+Il nous reste à trouver les "bons" coefficients de régression et les identifier à nos paramètres d'intérêt. On peut utiliser pour ce faire une régression linéaire: 
+
+```{r, warning=FALSE}
+reg_lineaire <- lm(veloc ~ I(veloc / conc), data = micmem_data)
+summary(reg_lineaire)
+```
+
+
+### Méthode non-linéaire (I)
+
+On peut enfin par essais et erreurs trouver les valeurs de $v_{\max}$ et $K_M$ qui s'ajustent le mieux aux données, en calculant l'erreur entre les données théoriques et les données observées:
+
+```{r erreur-quadratique-fun, echo = TRUE, eval = FALSE}
+erreur_quadratique <- function(conc, veloc, Vm, K) {
+  veloc_theo <- micmem(conc, Vm, K)
+  sum( (veloc - veloc_theo)^2 )
+}
+```
+
+Par exemple si on suppose que $v_\max = 190$ et $K_M = 0.04$, on obtient la courbe théorique suivante en rouge, qui ne se juxtapose pas avec nos points:
+
+```{r plot-micmem}
+plot_micmem(Vm = 190, K = 0.04, arrows = TRUE)
+```
+
+L'erreur quadratique entre les vraies valeurs (points noirs) et les valeurs théoriques sous les paramètres  $v_\max = 190$ et $K_M = 0.04$ est 
+```{r erreur-quad, exercise = TRUE, exercise.eval = TRUE}
+erreur_quadratique(micmem_data$conc, micmem_data$veloc, Vm = 190, K = .04)
+```
+
+On peut essayer de minimiser cette erreur en testant une grille de valeurs de $v_{\max}$ et $K_M$:
+
+```{r plot-contour-val, echo = TRUE}
+plot_contour(Vm_range = c(0, 400), K_range = c(0.01, 0.1))
+```
+
+A l'aide de `plot_contour()` et `erreur_quadratique()`, déterminer les valeurs optimales de $v_\max$ et $K_M$
+
+```{r plot-contour-exo, exercise = TRUE}
+
+```
+
+```{r plot-contour-exo-solution}
+plot_contour(Vm_range = c(180, 220), K_range = c(0.045, 0.065))
+```
+
+### Méthode non-linéaire (II)
+
+On peut aussi adopter une stratégie de recherche exhaustive avec la fonction `optim()`
+
+```{r optim-fun, echo = TRUE}
+optim_function <- function(par, data) {
+  Vm = par[1]
+  K  = par[2]
+  erreur_quadratique(data$conc, data$veloc, Vm = Vm, K = K)
+}
+optim(fn = optim_function, par = c(190, 0.04), data = micmem_data)
+```
+
+qui renvoie $V_m = 203$ et $K = 0.055$. On peut vérifier que ces valeurs donnent un bon ajustement:
+
+```{r check-values, exercise = TRUE}
+
+```
+
+```{r check-values-solution}
+plot_micmem(Vm = 203, K = 0.055)
+```
+
+
+## Détermination des constantes (cas réel)
+
+En général, les données sont plus bruitées que dans mon exemple précédent et les vitesses initiales mesurées sur différents réplicats ne sont pas identiques: 
+
+```{r echo = TRUE}
+micmem_data_exp
+```
+
+- Comparer les résultats obtenus par les différentes méthodes sur les données bruitées
+- Qu'est ce qui change par rapport au cas non bruité ? 
+
+```{r real-data, exercise = TRUE}
+
+```
+
