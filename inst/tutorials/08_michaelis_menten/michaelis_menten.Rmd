@@ -128,7 +128,7 @@ ggplot(micmem_data, aes(x = veloc / conc, y = veloc)) +
 
 Il nous reste à trouver les "bons" coefficients de régression et les identifier à nos paramètres d'intérêt. On peut utiliser pour ce faire une régression linéaire: 
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, echo = TRUE}
 reg_lineaire <- lm(veloc ~ I(veloc / conc), data = micmem_data)
 summary(reg_lineaire)
 ```
@@ -204,10 +204,44 @@ En général, les données sont plus bruitées que dans mon exemple précédent 
 micmem_data_exp
 ```
 
-- Comparer les résultats obtenus par les différentes méthodes sur les données bruitées
+### Méthode graphique
+
+- Représenter les données
 - Qu'est ce qui change par rapport au cas non bruité ? 
 
-```{r real-data, exercise = TRUE}
+```{r real-data-graphique, exercise = TRUE}
 
+```
+
+### Méthode linéaire (Eadie-Hofstee)
+
+- Utiliser la méthode linéaire pour estimer les paramètres
+- Qu'est ce qui change par rapport au cas non bruité ? 
+
+```{r real-data-linéaire, exercise = TRUE}
+
+```
+
+### Méthode non-linéaire 
+
+- Utiliser la méthode non-linéaire pour estimer les paramètres
+- Qu'est ce qui change par rapport au cas non bruité ? 
+
+```{r real-data-non-linéaire, exercise = TRUE}
+
+```
+
+### Comparaison
+
+- Comparer les résultats des différentes méthodes entre elles
+- Qu'est ce qui change par rapport au cas non bruité ? 
+
+### Pour aller plus loin
+
+On peut faire des régressions non linéaires pour essayer d'estimer les paramètres et avoir une idée de l'incertitude d'estimation. 
+
+```{r}
+reg_non_lineaire <- nls(veloc ~ SSmicmen(conc, Vm, K), data = micmem_data_exp)
+summary(reg_non_lineaire)
 ```
 
