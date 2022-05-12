@@ -218,7 +218,7 @@ micmem_data_exp
 - Utiliser la méthode linéaire pour estimer les paramètres
 - Qu'est ce qui change par rapport au cas non bruité ? 
 
-```{r real-data-linéaire, exercise = TRUE}
+```{r real-data-lineaire, exercise = TRUE}
 
 ```
 
@@ -227,7 +227,7 @@ micmem_data_exp
 - Utiliser la méthode non-linéaire pour estimer les paramètres
 - Qu'est ce qui change par rapport au cas non bruité ? 
 
-```{r real-data-non-linéaire, exercise = TRUE}
+```{r real-data-non-lineaire, exercise = TRUE}
 
 ```
 
