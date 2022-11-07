@@ -101,7 +101,7 @@ Each function takes a data frame or tibble as it's first argument and returns a 
 
 Use the example below to get a feel for `select()`. Can you extract just the `name` column? How about the `name` and `year` columns? How about all of the columns except `prop`?
 
-```{r select-1, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "bnames"}
+```{r select-1, exercise = TRUE, exercise.eval = TRUE}
 select(babynames, name, sex)
 ```
 
