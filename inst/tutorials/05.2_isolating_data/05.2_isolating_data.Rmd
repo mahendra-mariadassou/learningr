@@ -115,7 +115,7 @@ select(babynames, year, sex, name, n)
 
 You can also use a series of helpers with `select()`. For example, if you place a minus sign before a column name, `select()` will return every column but that column. Can you predict how the minus sign will work here?
 
-```{r select-2, exercise = TRUE, exercise.setup = "bnames"}
+```{r select-2, exercise = TRUE}
 select(babynames, -c(n, prop))
 ```
 
@@ -180,7 +180,7 @@ See if you can use the logical operators to manipulate our code below to show:
 * All of the children named "Khaleesi"
 * All of the names that have a missing value for `n` (Hint: this should return an empty data set).
 
-```{r filter-0, exercise = TRUE, exercise.setup = "bnames"}
+```{r filter-0, exercise = TRUE}
 filter(babynames, name == "Sea")
 ```
 
@@ -198,7 +198,7 @@ When you use logical tests, be sure to look out for two common mistakes. One app
 filter(babynames, name = "Sea")
 ```
 
-```{r filter-1a, exercise = TRUE, exercise.setup = "bnames"}
+```{r filter-1a, exercise = TRUE}
 
 ```
 
@@ -214,7 +214,7 @@ filter(babynames, name == "Sea")
 filter(babynames, name == Sea)
 ```
 
-```{r filter-1b, exercise = TRUE, exercise.setup = "bnames"}
+```{r filter-1b, exercise = TRUE}
 
 ```
 
@@ -265,7 +265,7 @@ Use Boolean operators to alter the code chunk below to return only the rows that
 * Names that were used by exactly 5 or 6 children in 1880
 * Names that are one of Acura, Lexus, or Yugo
 
-```{r filter-2, exercise = TRUE, exercise.eval = TRUE, exercise.setup = "bnames"}
+```{r filter-2, exercise = TRUE, exercise.eval = TRUE}
 filter(babynames, name == "Sea" | name == "Anemone")
 ```
 
@@ -283,7 +283,7 @@ Logical tests also invite two common mistakes that you should look out for. Each
 filter(babynames, 10 < n < 20)
 ```
 
-```{r filter-3, exercise = TRUE, exercise.setup = "bnames"}
+```{r filter-3, exercise = TRUE}
 
 ```
 
@@ -299,7 +299,7 @@ filter(babynames, 10 < n, n < 20)
 filter(babynames, n == 5 | n == 6 | n == 7 | n == 8 | n == 9)
 ```
 
-```{r filter-4, exercise = TRUE, exercise.setup = "bnames"}
+```{r filter-4, exercise = TRUE}
 
 ```
 
@@ -327,7 +327,7 @@ When you combine multiple logical tests, be sure to look out for these two commo
 
 Use the code chunk below to arrange babynames by `n`. Can you tell what the smallest value of `n` is? 
 
-```{r arrange-1, exercise = TRUE, exercise.setup = "bnames"}
+```{r arrange-1, exercise = TRUE}
 
 ```
 
@@ -371,7 +371,7 @@ Think you have it? Click Continue to test yourself.
 
 Which name was the most popular for a single gender in a single year? In the code chunk below, use `arrange()` to make the row with the largest value of `prop` appear at the top of the data set.
 
-```{r arrange-4, exercise = TRUE, exercise.setup = "bnames"}
+```{r arrange-4, exercise = TRUE}
 
 ```
 
@@ -381,7 +381,7 @@ arrange(babynames, desc(prop))
 
 Now arrange `babynames` so that the row with the largest value of `n` appears at the top of the data frame. Will this be the same row? Why or why not?
 
-```{r arrange-5, exercise = TRUE, exercise.setup = "bnames"}
+```{r arrange-5, exercise = TRUE}
 
 ```
 
@@ -449,7 +449,7 @@ I'll use pipes for the remainder of the tutorial, and I will expect you to as we
 
 Try to write your pipe without copying and pasting the code from above.
 
-```{r pipe-1, exercise = TRUE, exercise.setup = "bnames"}
+```{r pipe-1, exercise = TRUE}
 
 ```
 
@@ -470,7 +470,7 @@ You've now mastered a set of skills that will let you easily plot the popularity
 
 Note that the first argument of `ggplot()` takes a data frame, which means you can add `ggplot()` directly to the end of a pipe. However, you will need to switch from `%>%` to `+` to finish adding layers to your plot.
 
-```{r your-name-1, exercise = TRUE, exercise.setup = "bnames"}
+```{r your-name-1, exercise = TRUE}
 
 ```
 
