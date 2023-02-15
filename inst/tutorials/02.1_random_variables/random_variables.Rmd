@@ -237,7 +237,7 @@ second_diamond <- sample(x = jar, size = 1)
 
 ### Diamonds in a jar (II)
 
-The previous example illsutrated **sampling without replacement**: the first draw modifies the content of the jar and hence, the second draw. 
+The previous example illustrated **sampling without replacement**: the first draw modifies the content of the jar and hence, the second draw. 
 
 We drew two diamonds (`first_diamond` and `second_diamond`) sequentially but you can do it all at once using `sample()`. Try to do it by completing the following code:
 
@@ -343,7 +343,9 @@ question("Select all possible values for $\\mathbb{P}(X = x)$:",
          answer("5/16", TRUE),
          answer("5/8", TRUE),
          answer("1"), 
-         allow_retry = TRUE)
+         allow_retry = TRUE, 
+         try_again = "Did you consider diamond sizes both present and not present in the jar ?", 
+         post_message = "The values 1/16 (corresponding to x = 8), 5/16  (corresponding to x = 4) and 5/8 (corresponding to x = 1) are easy to pick but don't forget that $\\mathbb{P}(X = x) = 0$ for any other value.")
 ```
 
 There is no straighforward way to build the pdf of $X$ (there is for standard random variables). You can however build a related quantity: the frequency of different diamond sizes in the full populations using `table()` 
