@@ -37,6 +37,11 @@ tutorial_options(exercise.timelimit = 60, exercise.checker = checker)
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
+```{r bnames}
+data(babynames)
+```
+
+
 ## Welcome
 
 In this case study, you will identify the most popular American names from 1880 to 2015. While doing this, you will master three more dplyr functions:
