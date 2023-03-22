@@ -84,9 +84,9 @@ babynames %>%
 If I had skipped this step, my line graph would've connected all of the points in the large data set, creating an uninformative graph.
 
 ```{r out.width = "60%", cached = TRUE}
-ggplot(babynames) +
+ggplot(babynames %>% filter(name %in% top_20)) +
   geom_line(aes(x = year, y = prop)) +
-  labs(title = "Popularity of every name in the data set")
+  labs(title = "Popularity of of the 20 most popular names in the data set")
 ```
 
 Your goal in this section is to repeat this process for your own name (or a name that you choose). Along the way, you will learn a set of functions that isolate information within a data set. 
