@@ -66,7 +66,7 @@ But before you do, you will need to trim down `babynames`. At the moment, there 
 To see what I mean, consider how I made the plot above: I began with the entire data set, which if plotted as a scatterplot would've looked like this.
 
 ```{r out.width = "60%", cached = TRUE}
-ggplot(babynames %>% filter(name %in% top_10)) +
+ggplot(babynames %>% filter(name %in% top_20)) +
   geom_point(aes(x = year, y = prop)) +
   labs(title = "Popularity of the 20 most popular names in the data set")
 ```
