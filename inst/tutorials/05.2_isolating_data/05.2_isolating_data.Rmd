@@ -18,6 +18,14 @@ checker <- function(label, user_code, check_code, envir_result, evaluate_result,
 }
 tutorial_options(exercise.timelimit = 60, exercise.checker = checker)
 knitr::opts_chunk$set(echo = FALSE)
+
+tops <- babynames::babynames %>% 
+  group_by(name, sex) %>% 
+  summarise(total = sum(n)) %>% 
+  ungroup() %>% 
+  top_n(20, total)
+  
+top_20 <- tops$name
 ```
 
 ## Welcome
@@ -58,9 +66,9 @@ But before you do, you will need to trim down `babynames`. At the moment, there 
 To see what I mean, consider how I made the plot above: I began with the entire data set, which if plotted as a scatterplot would've looked like this.
 
 ```{r out.width = "60%", cached = TRUE}
-ggplot(babynames) +
+ggplot(babynames %>% filter(name %in% top_10)) +
   geom_point(aes(x = year, y = prop)) +
-  labs(title = "Popularity of every name in the data set")
+  labs(title = "Popularity of the 20 most popular names in the data set")
 ```
 
 I then narrowed the data to just the rows that contain my name, before plotting the data with a line geom. Here's how the rows with just my name look as a scatterplot.
